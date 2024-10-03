@@ -1,0 +1,169 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+input[type="number"] {
+    width: 50px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* ... ваши стили ... */
+
+button {
+    padding: 12px 24px;
+    background-color: #ff9800; /* Цвет кнопки */
+    color: white;
+    border: none;
+    border-radius: 8px; /* Скругление углов */
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;  /* Пиксельный шрифт */
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3); /* Тень */ 
+    position: relative;  /* Для позиционирования градиента */
+    overflow: hidden; /* Для корректного отображения градиента */
+  }
+  
+  button:hover {
+    background-color: #ffc107; /* Цвет при наведении */
+  }
+  
+  button:active {
+    transform: translateY(2px); /* Эффект нажатия */
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); /* Тень при нажатии */
+  }
+  
+  button::before {
+    content: ""; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, #ff5722, #ff9800, #ffc107); /* Градиент */
+    opacity: 0.3; /* Прозрачность градиента */
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  button:hover::before {
+    transform: translateY(0);
+  }
+
+#crossword-container {
+    margin-top: 20px;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.crossword-table {
+    border-collapse: collapse;
+    margin: 20px auto;
+}
+
+.crossword-table td {
+    border: 1px solid #000;
+    width: 30px;
+    height: 30px;
+    position: relative;
+}
+
+.crossword-input {
+    width: 28px;
+    height: 28px;
+    border: none;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: #fff;
+}
+
+.crossword-input:focus {
+    outline: none;
+    background-color: #e0f7fa;
+}
+
+.black-cell {
+    background-color: #000;
+}
+
+.clues-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.clues-section {
+    width: 45%;
+}
+
+.clues-section h3 {
+    margin-bottom: 10px;
+}
+
+.clues-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.clues-section li {
+    margin-bottom: 5px;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+.timer-container {
+    margin: 20px auto;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.rainbow-text {
+    background-image: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    background-clip: text; /* Стандартное свойство */
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-animation 5s linear infinite;
+  }
+  
+  @keyframes rainbow-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  h1 {
+    font-family: 'Press Start 2P', monospace; 
+    /* ... другие стили ... */
+  }
+
+  

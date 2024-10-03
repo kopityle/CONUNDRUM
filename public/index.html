@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONUNDRUM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"> 
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CONUNDRUM - Генератор кроссвордов</title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <!-- Пиксельный логотип -->
+                <img src="images/logo-pixel.png" alt="CONUNDRUM Logo">
+            </div>
+            <div class="container">
+                <h1 class="rainbow-text">Генератор Кроссвордов</h1>
+                <form id="crossword-form">
+            <nav>
+                <!-- Навигационные ссылки -->
+                <a href="#">Главная</a>
+                <a href="#">Создать</a>
+                <a href="#">О нас</a>
+            </nav>
+        </header>
+
+
+            <textarea id="document" placeholder="Вставьте текст..."></textarea>
+            <br>
+            <label for="vertical-words">Количество слов по вертикали:</label>
+            <input type="number" id="vertical-words" value="10" min="1">
+            <br>
+            <label for="horizontal-words">Количество слов по горизонтали:</label>
+            <input type="number" id="horizontal-words" value="10" min="1">
+            <br>
+            <button type="submit">Сгенерировать кроссворд</button>
+        </form>
+        <div id="crossword-container"></div>
+        
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
