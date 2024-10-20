@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +12,9 @@
   "dependencies": {
     "axios": "^1.7.7",
     "crossword-layout-generator": "^0.1.1",
-    "express": "^4.21.0"
+    "crosswords-js": "^0.1.14",
+    "express": "^4.21.0",
+    "openai": "^4.63.0",
+    "python-shell": "^5.0.0"
   }
 }

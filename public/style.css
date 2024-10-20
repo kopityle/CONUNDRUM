@@ -1,3 +1,4 @@
+/* css */
 body {
     font-family: sans-serif;
     display: flex;
@@ -14,6 +15,8 @@ body {
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     text-align: center;
+    width: 80%;
+    margin: 0 auto; 
 }
 
 textarea {
@@ -33,67 +36,61 @@ input[type="number"] {
     border-radius: 3px;
 }
 
-/* ... ваши стили ... */
-
 button {
     padding: 12px 24px;
-    background-color: #ff9800; /* Цвет кнопки */
+    background-color: #ff9800; 
     color: white;
     border: none;
-    border-radius: 8px; /* Скругление углов */
+    border-radius: 8px; 
     cursor: pointer;
-    font-family: 'Press Start 2P', monospace;  /* Пиксельный шрифт */
-    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3); /* Тень */ 
-    position: relative;  /* Для позиционирования градиента */
-    overflow: hidden; /* Для корректного отображения градиента */
-  }
-  
-  button:hover {
-    background-color: #ffc107; /* Цвет при наведении */
-  }
-  
-  button:active {
-    transform: translateY(2px); /* Эффект нажатия */
-    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); /* Тень при нажатии */
-  }
-  
-  button::before {
-    content: ""; 
+    font-family: 'Press Start 2P', monospace; 
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3); 
+    position: relative; 
+    overflow: hidden; 
+}
+
+button:hover {
+    background-color: #ffc107; 
+}
+
+button:active {
+    transform: translateY(2px); 
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); 
+}
+
+button::before {
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to right, #ff5722, #ff9800, #ffc107); /* Градиент */
-    opacity: 0.3; /* Прозрачность градиента */
+    background: linear-gradient(to right, #ff5722, #ff9800, #ffc107);
+    opacity: 0.3;
     transform: translateY(-100%);
     transition: transform 0.3s ease;
-  }
-  
-  button:hover::before {
+}
+
+button:hover::before {
     transform: translateY(0);
-  }
+}
 
 #crossword-container {
     margin-top: 20px;
-}
-
-.container {
-    width: 80%;
-    margin: 0 auto;
-    text-align: center;
 }
 
 .crossword-table {
     border-collapse: collapse;
     margin: 20px auto;
 }
-
 .crossword-table td {
     border: 1px solid #000;
     width: 30px;
     height: 30px;
     position: relative;
+    text-align: center;
+    font-size: 16px; 
+    font-family: 'Roboto', sans-serif;
 }
 
 .crossword-input {
@@ -143,27 +140,69 @@ button {
     color: red;
     font-weight: bold;
 }
+
 .timer-container {
     margin: 20px auto;
     font-size: 1.2em;
     font-weight: bold;
 }
+
 .rainbow-text {
     background-image: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-    background-clip: text; /* Стандартное свойство */
+    background-clip: text; 
     -webkit-background-clip: text; 
     -webkit-text-fill-color: transparent;
     animation: rainbow-animation 5s linear infinite;
-  }
-  
-  @keyframes rainbow-animation {
+}
+
+@keyframes rainbow-animation {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
-  }
-  h1 {
-    font-family: 'Press Start 2P', monospace; 
-    /* ... другие стили ... */
-  }
+}
 
-  
+h1 {
+    font-family: 'Press Start 2P', monospace; 
+} 
+
+.crossword-table {
+    border-collapse: collapse;
+    margin: 20px auto;
+}
+
+.crossword-cell {
+    border: 1px solid black;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.crossword-cell:focus { 
+    outline: none;
+    background-color: #e0f7fa;
+}
+
+.black-cell {
+    background-color: black;
+}
+
+
+#clues-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.clues-section {
+    width: 45%;
+}
+
+.word-number {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 10px;
+    color: gray;
+}
