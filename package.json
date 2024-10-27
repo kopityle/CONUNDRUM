@@ -13,10 +13,13 @@
     "axios": "^1.7.7",
     "crossword-layout-generator": "^0.1.1",
     "crosswords-js": "^0.1.14",
+    "docx": "^9.0.2",
+    "docx-parser": "^0.2.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.63.0",
+    "pdf-parse": "^1.1.1",
     "python-shell": "^5.0.0",
     "uuid": "^10.0.0"
   }

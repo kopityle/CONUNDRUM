@@ -5,7 +5,9 @@ const clg = require('crossword-layout-generator');
 const fs = require('fs');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
-const multer = require('multer'); //  Добавляем multer
+const multer = require('multer');
+const DocxParser = require('docx-parser');
+const pdf = require('pdf-parse');
 require('dotenv').config();
 
 const app = express();
@@ -14,26 +16,25 @@ const publicPath = path.join(__dirname, 'public');
 
 // Настройка multer для сохранения файлов во временную папку
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      // Указываем путь к вашей новой временной папке
-      cb(null, path.join(__dirname, 'temp-uploads')); 
-    },
-    filename: function (req, file, cb) {
-      const uniqueFilename = uuidv4() + '.txt';
-      cb(null, uniqueFilename);
-    }
-  });
-  const upload = multer({ storage: storage });
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'temp-uploads'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueFilename = uuidv4() + path.extname(file.originalname);
+    cb(null, uniqueFilename);
+  }
+});
+const upload = multer({ storage: storage });
+
 console.log("Временная папка:", os.tmpdir());
 app.use(express.static(publicPath));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.urlencoded({ extended: true }));
 
-const openrouterApiKey = process.env.OPENROUTER_API_KEY; 
+const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Используем upload.single('file-upload') для обработки загрузки одного файла
-app.post('/generate-crossword', upload.single('file-upload'), async (req, res) => { 
+app.post('/generate-crossword', upload.single('file-upload'), async (req, res) => {
   console.log('Получен запрос на генерацию кроссворда:', req.body.inputType);
   console.log('req.file:', req.file);
   console.log('req.body:', req.body);
@@ -44,13 +45,36 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
 
   if (inputType === 'text') {
     text = req.body.text;
+    generateCrossword(text, inputType, totalWords, res);
   } else if (inputType === 'topic') {
     text = req.body.topic;
-  } else if (inputType === 'file' && req.file) { //  Проверяем наличие файла
+    generateCrossword(text, inputType, totalWords, res);
+  } else if (inputType === 'file' && req.file) {
     try {
-      // Читаем текст из загруженного файла
-      text = fs.readFileSync(req.file.path, 'utf8');
-      console.log('Текст из файла:', text);
+      const fileExtension = path.extname(req.file.path).toLowerCase();
+
+      if (fileExtension === '.txt') {
+        text = fs.readFileSync(req.file.path, 'utf8');
+        console.log('Текст из .txt файла:', text);
+        generateCrossword(text, inputType, totalWords, res);
+      } else if (fileExtension === '.docx') {
+        // Обработка .docx
+        // НЕПРАВИЛЬНО: const doc = new DocxParser();
+        DocxParser.parseDocx(req.file.path, function(data) { //  Правильный вызов
+          text = data;
+          console.log('Текст из .docx файла:', text);
+          generateCrossword(text, inputType, totalWords, res);
+        });
+      } else if (fileExtension === '.pdf') {
+        const dataBuffer = fs.readFileSync(req.file.path);
+        pdf(dataBuffer).then(function(data) {
+          text = data.text;
+          console.log('Текст из .pdf файла:', text);
+          generateCrossword(text, inputType, totalWords, res);
+        });
+      } else {
+        return res.status(400).send('Неподдерживаемый тип файла.');
+      }
 
       // Удаляем временный файл
       fs.unlinkSync(req.file.path);
@@ -62,8 +86,14 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
   } else {
     return res.status(400).send('Неверный тип ввода.');
   }
+});
 
+//  Функция для обработки текста и генерации кроссворда
+async function generateCrossword(text, inputType, totalWords, res) {
   try {
+    // Очищаем текст, удаляя лишние пробелы и переносы строк
+    text = text.trim().replace(/\s+/g, ' ');
+
     let prompt = '';
     if (inputType === 'topic') {
       prompt = `Составьте кроссворд из ${totalWords} слов на тему "${text}". 
@@ -75,7 +105,7 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
         ...
       ]
       Не добавляйте никаких дополнительных символов или текста.`;
-    } else { // inputType === 'file' or 'text'
+    } else {
       prompt = `Из текста: "${text}" выделите ${totalWords} ключевых слов. Для каждого слова дайте краткое определение или вопрос, подходящее для кроссворда. Сформируйте ответ в формате JSON:
       [
         {"word": "слово1", "clue": "определение1"},
@@ -84,6 +114,8 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
       ]
       Не добавляйте никаких дополнительных символов или текста.`;
     }
+
+    console.log('Промпт, который отправляется нейросети:', prompt); // Добавлен console.log
 
     const response = await axios.post(openrouterApiUrl, {
       model: "google/gemma-2-9b-it:free",
@@ -134,7 +166,7 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
     console.error('Ошибка API запроса:', error.response ? error.response.data : error.message);
     res.status(500).send('Ошибка API запроса');
   }
-});
+}
 
 
 function createGridFromLayout(layout, wordsData) {
