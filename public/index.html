@@ -1,52 +1,44 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONUNDRUM - Генератор кроссвордов</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-</head>
-
-<body>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONUNDRUM - Генератор кроссвордов</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONUNDRUM - Генератор кроссвордов</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <!-- Пиксельный логотип -->
-            <img src="images/logo-pixel.png" alt="CONUNDRUM Logo">
-        </div>
-        <div class="container">
-            <h1 class="rainbow-text">Генератор Кроссвордов</h1>
-            <form id="crossword-form">
+  <header>
+    <div class="container">
+      <h1 class="rainbow-text">Генератор Кроссвордов</h1>
+      <form id="crossword-form" enctype="multipart/form-data">
         <nav>
-            <!-- Навигационные ссылки -->
-            <a href="#">Главная</a>
-            <a href="#">Создать</a>
-            <a href="#">О нас</a>
+          <a href="#">Главная</a>
+          <a href="#">Создать</a>
+          <a href="#">О нас</a>
         </nav>
-    </header>
 
+        <label for="input-type">Тип ввода:</label>
+        <select id="input-type" name="inputType"> 
+          <option value="text">Текст</option>
+          <option value="file">Файл</option>
+          <option value="topic">Тема</option>
+        </select>
 
-        <textarea id="document" placeholder="Вставьте текст..."></textarea>
+        <textarea id="document" name="text" placeholder="Вставьте текст..." style="display: none;"></textarea>
+        <input type="file" id="file-upload" name="file-upload" style="display: none;">
+        <input type="text" id="topic" name="topic" placeholder="Введите тему кроссворда" style="display: none;">
+
         <br>
         <label for="total-words">Общее количество слов:</label>
-        <input type="number" id="total-words" value="10" min="1">
+        <input type="number" id="total-words" name="totalWords" value="10" min="1">
         <br>
         <button type="submit">Сгенерировать кроссворд</button>
-    </form>
-    <div id="crossword-container"></div>
-    <div id="clues-container"></div> 
-    
-</div>
-<script src="script.js"></script>
+      </form>
+      <div id="crossword-container"></div>
+      <div id="clues-container"></div> 
+    </div>
+  </header>
+  <script src="script.js"></script> 
 </body>
 </html>
