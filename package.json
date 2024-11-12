@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@supabase/supabase-js": "^2.46.1",
     "axios": "^1.7.7",
     "crossword-layout-generator": "^0.1.1",
     "crosswords-js": "^0.1.14",
