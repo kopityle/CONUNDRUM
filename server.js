@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const DocxParser = require('docx-parser');
 const pdf = require('pdf-parse');
+const { SupabaseClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
@@ -30,7 +31,6 @@ console.log("Временная папка:", os.tmpdir());
 app.use(express.static(publicPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -167,7 +167,17 @@ async function generateCrossword(text, inputType, totalWords, res) {
     res.status(500).send('Ошибка API запроса');
   }
 }
+// Отправка данных в SupabaseClient
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_KEY;
 
+
+app.get('/supabase-config', (req, res) => {
+  res.json({
+    supabaseUrl,
+    supabaseAnonKey,
+  });
+});
 
 function createGridFromLayout(layout, wordsData) {
   const grid = Array.from({ length: layout.rows }, () => Array(layout.cols).fill(''));

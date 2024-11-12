@@ -6,11 +6,107 @@
   <title>CONUNDRUM - Генератор кроссвордов</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></script>
 </head>
 <body>
   <header>
     <div class="container">
       <h1 class="rainbow-text">Генератор Кроссвордов</h1>
+      <div class="auth-buttons">
+        <button class="auth-btn" id="open-register-popup">Зарегистрироваться</button>
+        <button class="auth-btn" id="open-login-popup">Войти</button>
+      </div>
+    </div>
+  </header>
+    <!-- Поп-ап для регистрации -->
+    <div id="register-popup" class="popup">
+      <div class="popup-content">
+        <span class="close" id="close-register-popup">&times;</span>
+        <h2>Регистрация</h2>
+        <form id="register-form">
+          <input type="text" id="register-username" placeholder="Username" required>
+          <input type="email" id="register-email" placeholder="Email" required>
+          <input type="password" id="register-password" placeholder="Пароль" required>
+          <input type="number" id="register-age" placeholder="Возраст (необязательно)" min="1" max="120">
+          <select id="register-gender">
+            <option value="">Выберите пол (необязательно)</option>
+            <option value="male">Мужской</option>
+            <option value="female">Женский</option>
+            <option value="other">Другой</option>
+          </select>
+          <select id="register-occupation">
+            <option value="">Выберите род деятельности (необязательно)</option>
+            <option value="student">Учащийся</option>
+            <option value="professor">Преподаватель</option>
+            <option value="linguist">Лингвист</option>
+            <option value="writer">Писатель</option>
+            <option value="journalist">Журналист</option>
+            <option value="translator">Переводчик</option>
+            <option value="crossword_creator">Составитель кроссвордов</option>
+            <option value="puzzle_enthusiast">Любитель головоломок</option>
+            <option value="researcher">Исследователь</option>
+            <option value="game_developer">Разработчик игр</option>
+            <option value="other">Другое</option>
+          </select>
+          <button type="submit">Зарегистрироваться</button>
+        </form>
+      </div>
+    </div>
+  <!-- Поп-ап для входа -->
+  <div id="login-popup" class="popup">
+      <div class="popup-content">
+          <span class="close" id="close-login-popup">&times;</span>
+          <h2>Вход</h2>
+          <form id="login-form">
+              <input type="email" id="login-email" placeholder="Email" required>
+              <input type="password" id="login-password" placeholder="Пароль" required>
+              <button id="open-login-popup">Войти</button>
+          </form>
+      </div>
+  </div>
+  <!-- Поп-ап для профиля -->
+  <button id="open-profile-popup" style="display: none;">Личный кабинет</button>
+  <div id="profile-popup" class="popup">
+    <div class="popup-content">
+      <span class="close" id="close-profile-popup">&times;</span>
+      <h2>Личный кабинет</h2>
+      <p>Username: <span id="profile-username"></span></p>
+      <p>Email: <span id="profile-email"></span></p>
+      <form id="profile-form">
+        <label for="profile-age">Возраст:</label>
+        <input type="number" id="profile-age" name="age" min="1" max="120">
+        
+        <label for="profile-gender">Пол:</label>
+        <select id="profile-gender" name="gender">
+          <option value="">Не указано</option>
+          <option value="male">Мужской</option>
+          <option value="female">Женский</option>
+          <option value="other">Другой</option>
+        </select>
+        
+        <label for="profile-occupation">Род деятельности:</label>
+        <select id="profile-occupation" name="occupation">
+          <option value="">Не указано</option>
+          <option value="student">Учащийся</option>
+          <option value="professor">Преподаватель</option>
+          <option value="linguist">Лингвист</option>
+          <option value="writer">Писатель</option>
+          <option value="crossword_creator">Составитель кроссвордов</option>
+          <option value="puzzle_enthusiast">Любитель головоломок</option>
+          <option value="researcher">Исследователь</option>
+          <option value="game_developer">Разработчик игр</option>
+          <option value="other">Другое</option>
+        </select>
+        
+        <button type="submit">Обновить профиль</button>
+      </form>
+      <button id="logout-button">Выйти</button>
+    </div>
+  </div>
+</main> 
+  <main> 
+    <div class="container">
       <form id="crossword-form" enctype="multipart/form-data">
         <nav>
           <a href="#">Главная</a>
@@ -38,7 +134,6 @@
       <div id="crossword-container"></div>
       <div id="clues-container"></div> 
     </div>
-  </header>
-  <script src="script.js"></script> 
+  <script src="script.js" type="module"></script>
 </body>
 </html>
