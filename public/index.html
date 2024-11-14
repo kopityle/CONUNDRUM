@@ -11,13 +11,18 @@
 </head>
 <body>
   <header>
-    <div class="container">
-      <h1 class="rainbow-text">Генератор Кроссвордов</h1>
+
+      <h1 class="rainbow-text">CONUNDRUM</h1>
+      <nav>
+        <a href="#">Главная</a>
+        <a href="#">Создать</a>
+        <a href="#">О нас</a>
+      </nav>
       <div class="auth-buttons">
         <button class="auth-btn" id="open-register-popup">Зарегистрироваться</button>
         <button class="auth-btn" id="open-login-popup">Войти</button>
+        <button id="open-profile-popup" style="display: none;">Личный кабинет</button>
       </div>
-    </div>
   </header>
     <!-- Поп-ап для регистрации -->
     <div id="register-popup" class="popup">
@@ -33,7 +38,6 @@
             <option value="">Выберите пол (необязательно)</option>
             <option value="male">Мужской</option>
             <option value="female">Женский</option>
-            <option value="other">Другой</option>
           </select>
           <select id="register-occupation">
             <option value="">Выберите род деятельности (необязательно)</option>
@@ -66,7 +70,7 @@
       </div>
   </div>
   <!-- Поп-ап для профиля -->
-  <button id="open-profile-popup" style="display: none;">Личный кабинет</button>
+
   <div id="profile-popup" class="popup">
     <div class="popup-content">
       <span class="close" id="close-profile-popup">&times;</span>
@@ -82,7 +86,6 @@
           <option value="">Не указано</option>
           <option value="male">Мужской</option>
           <option value="female">Женский</option>
-          <option value="other">Другой</option>
         </select>
         
         <label for="profile-occupation">Род деятельности:</label>
@@ -104,15 +107,11 @@
       <button id="logout-button">Выйти</button>
     </div>
   </div>
-</main> 
+
   <main> 
     <div class="container">
       <form id="crossword-form" enctype="multipart/form-data">
-        <nav>
-          <a href="#">Главная</a>
-          <a href="#">Создать</a>
-          <a href="#">О нас</a>
-        </nav>
+
 
         <label for="input-type">Тип ввода:</label>
         <select id="input-type" name="inputType"> 
@@ -131,10 +130,11 @@
         <input type="number" id="total-words" name="totalWords" value="10" min="1">
         <br>
         <button type="submit">Сгенерировать кроссворд</button>
+        <div id="crossword-container"></div>
+        <div id="clues-container"></div> 
       </form>
-      <div id="crossword-container"></div>
-      <div id="clues-container"></div> 
     </div>
+  </main>
   <script src="script.js" type="module"></script>
 </body>
 </html>
