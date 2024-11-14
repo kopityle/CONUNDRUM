@@ -80,25 +80,24 @@ async function generateCrossword(text, inputType, totalWords, res) {
 
     let prompt = '';
     if (inputType === 'topic') {
-      prompt = `Составьте кроссворд из ${totalWords} слов на тему "${text}". 
-      Для каждого слова дайте краткое определение или вопрос, подходящее для кроссворда. 
-      Сформируйте ответ в формате JSON:
+      prompt = `Generate real ${totalWords} words related to the topic "${text}". For each word, provide a concise, accurate, and unambiguous definition, question, or short description suitable for a word puzzle. Ensure the clue directly relates to the word and is in the same language as the input topic.
+      Format the response as JSON:
       [
-        {"word": "слово1", "clue": "определение1"},
-        {"word": "слово2", "clue": "определение2"},
+        {"word": "word1", "clue": "clue1"},
+        {"word": "word2", "clue": "clue2"},
         ...
       ]
-      Не добавляйте никаких дополнительных символов или текста.`;
-    } else {
-      prompt = `Из текста: "${text}" выделите ${totalWords} ключевых слов. Для каждого слова дайте краткое определение или вопрос, подходящее для кроссворда. Сформируйте ответ в формате JSON:
+      Do not add anything outside the JSON structure. Ensure valid JSON.`;
+    } else { // inputType === 'text' or 'file'
+      prompt = `Extract ${totalWords} keywords from the given text: "${text}". For each word, create a concise, accurate, and unambiguous definition, question, or short description. The clue must clearly relate to the meaning of the word within the provided text and be in the same language as the input text.
+      Format the response as JSON:
       [
-        {"word": "слово1", "clue": "определение1"},
-        {"word": "слово2", "clue": "определение2"},
+        {"word": "word1", "clue": "clue1"},
+        {"word": "word2", "clue": "clue2"},
         ...
       ]
-      Не добавляйте никаких дополнительных символов или текста.`;
+      Do not add anything outside the JSON structure. Ensure valid JSON.`;
     }
-
     console.log('Промпт, который отправляется нейросети:', prompt); // Добавлен console.log
 
     const response = await axios.post(openrouterApiUrl, {
