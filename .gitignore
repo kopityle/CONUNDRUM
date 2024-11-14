@@ -5,5 +5,4 @@ Thumbs.db
 .env
 *.log
 *.tmp
-temp-uploads/
 dist/

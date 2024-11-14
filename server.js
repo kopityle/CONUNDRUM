@@ -1,10 +1,7 @@
 const express = require('express');
 const path = require('path');
 const axios = require('axios');
-const clg = require('crossword-layout-generator');
-const fs = require('fs');
-const os = require('os');
-const { v4: uuidv4 } = require('uuid');
+const clg = require('crossword-layout-generator')
 const multer = require('multer');
 const DocxParser = require('docx-parser');
 const pdf = require('pdf-parse');
@@ -15,24 +12,18 @@ const app = express();
 const port = 8089;
 const publicPath = path.join(__dirname, 'public');
 
-// Настройка multer для сохранения файлов во временную папку
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, 'temp-uploads'));
-  },
-  filename: function (req, file, cb) {
-    const uniqueFilename = uuidv4() + path.extname(file.originalname);
-    cb(null, uniqueFilename);
-  }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-console.log("Временная папка:", os.tmpdir());
+// Middleware
 app.use(express.static(publicPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Переменные окружения
 const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_KEY;
 
 app.post('/generate-crossword', upload.single('file-upload'), async (req, res) => {
   console.log('Получен запрос на генерацию кроссворда:', req.body.inputType);
@@ -51,34 +42,27 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
     generateCrossword(text, inputType, totalWords, res);
   } else if (inputType === 'file' && req.file) {
     try {
-      const fileExtension = path.extname(req.file.path).toLowerCase();
+      const fileBuffer = req.file.buffer; // Файл в буфере
+      const fileExtension = path.extname(req.file.originalname).toLowerCase();
 
       if (fileExtension === '.txt') {
-        text = fs.readFileSync(req.file.path, 'utf8');
+        text = fileBuffer.toString('utf-8');
         console.log('Текст из .txt файла:', text);
         generateCrossword(text, inputType, totalWords, res);
       } else if (fileExtension === '.docx') {
         // Обработка .docx
-        // НЕПРАВИЛЬНО: const doc = new DocxParser();
-        DocxParser.parseDocx(req.file.path, function(data) { //  Правильный вызов
+        DocxParser.parseDocx(fileBuffer, (data) => {
           text = data;
-          console.log('Текст из .docx файла:', text);
           generateCrossword(text, inputType, totalWords, res);
-        });
+      });
       } else if (fileExtension === '.pdf') {
-        const dataBuffer = fs.readFileSync(req.file.path);
-        pdf(dataBuffer).then(function(data) {
+        pdf(fileBuffer).then((data) => {
           text = data.text;
-          console.log('Текст из .pdf файла:', text);
           generateCrossword(text, inputType, totalWords, res);
-        });
+      });
       } else {
         return res.status(400).send('Неподдерживаемый тип файла.');
       }
-
-      // Удаляем временный файл
-      fs.unlinkSync(req.file.path);
-      console.log('Временный файл удален:', req.file.path);
     } catch (err) {
       console.error('Ошибка при работе с файлом:', err);
       return res.status(500).send('Ошибка при работе с файлом.');
@@ -168,10 +152,6 @@ async function generateCrossword(text, inputType, totalWords, res) {
   }
 }
 // Отправка данных в SupabaseClient
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY;
-
-
 app.get('/supabase-config', (req, res) => {
   res.json({
     supabaseUrl,

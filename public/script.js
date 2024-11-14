@@ -7,7 +7,27 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
     const totalWords = parseInt(document.getElementById('total-words').value);
     const topic = document.getElementById('topic').value;
     const fileInput = document.getElementById('file-upload');
-  
+      // --- Проверка на пустые поля ---
+      if (inputType === '') {
+        return displayError('Выберите тип ввода.');
+    }
+
+    if (inputType === 'text' && documentText.trim() === '') {
+        return displayError('Введите текст.');
+    }
+
+    if (inputType === 'topic' && topic.trim() === '') {
+        return displayError('Введите тему.');
+    }
+
+    if (inputType === 'file' && !fileInput.files.length) {
+        return displayError('Выберите файл.');
+    }
+
+    // Проверка на число слов
+    if (isNaN(totalWords) || totalWords < 1) {
+        return displayError('Введите корректное количество слов (больше 0).');
+    }
     // Создаем FormData
     const formData = new FormData();
   
