@@ -1,7 +1,6 @@
 /* css */
 body {
     font-family: sans-serif;
-    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -167,10 +166,6 @@ h1 {
     font-family: 'Press Start 2P', monospace; 
 } 
 
-.crossword-table {
-    border-collapse: collapse;
-    margin: 20px auto;
-}
 
 .crossword-cell {
     border: 1px solid black;
@@ -209,6 +204,20 @@ h1 {
     color: gray;
 }
 
+#crossword-form label,
+#crossword-form input,
+#crossword-form select,
+#crossword-form textarea,
+#crossword-form button {
+    box-sizing: border-box; /*  Включаем padding и border в ширину */
+    display: block;  /*  Каждый элемент на новой строке */
+    margin-bottom: 10px; /*  Отступ снизу */
+    margin: 0 auto
+}
+
+#crossword-form input[type="number"] {
+    width: 55px; /*  Фиксированная ширина для number input */
+}
 /* Basic Popup Styles */
 .popup {
     display: none; /* Hidden by default */
@@ -325,44 +334,90 @@ h1 {
 #logout-button:hover {
     background-color: #da190b;
 }
-@media (max-width: 768px) { /* Adjust 768px to your desired breakpoint */
-    header {
-        flex-direction: column; /* Stack header elements vertically */
-        align-items: flex-start; /* Align items to the left */
-        padding: 10px; /* Reduce padding */
+
+.show-answer-button {
+    /* Стили для кнопки */
+    margin-left: 10px; /* Отступ от текста подсказки */
+    padding: 5px 10px;
+    font-size: 12px; /* Или другой подходящий размер */
+    cursor: pointer;  /* Курсор в виде руки */
+}
+
+/* style.css */
+.loading-indicator {
+    display: flex;
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+    height: 100px; /* Или другая подходящая высота */
+    font-size: 20px; /* Или другой размер шрифта */
+}
+
+@media (max-width: 768px) { /*  Или другое значение ширины экрана */
+
+    #crossword-form label,
+    #crossword-form select,
+    #crossword-form input,
+    #crossword-form textarea,
+    #crossword-form button[type="submit"] {
+      font-size: 14px; /* Уменьшаем размер шрифта */
     }
 
-    header h1 {
-        font-size: 1.5rem; /* Smaller heading */
-        margin-bottom: 10px; /* Add spacing below heading */
+    .crossword-table {
+        width: 100%; /* Кроссворд занимает всю ширину */
+        table-layout: fixed; /* Фиксированная ширина столбцов */
+        overflow-x: auto; /*  Горизонтальный скролл, если кроссворд не влезает */
+        display: block;  /*  Чтобы скролл работал */
+        white-space: nowrap; /*  Предотвращаем перенос слов в ячейках */
+
     }
 
-    nav {
-        display: flex;
-        flex-direction: column; /* Stack nav items vertically */
-        margin-bottom: 10px; /* Add spacing below nav */
+    #clues-container {
+        flex-direction: column; /* Подсказки друг под другом */
+        margin-top: 20px; /*  Отступ сверху от кроссворда */
     }
 
-    nav a {
-        display: block; /* Make nav links block elements */
-        margin-bottom: 5px; /* Add spacing between nav links */
+    .clues-section {
+        width: 100%; /*  Подсказки занимают всю ширину */
+        margin-bottom: 10px; /*  Отступ снизу */
     }
-
-    .auth-buttons {
-        flex-direction: column; /* Stack buttons vertically */
-    }
-
-    .auth-btn {
-        width: 100%; /* Make buttons full width */
-        margin-bottom: 5px; /* Add spacing between buttons */
-    }
-
-
     .container {
-        width: 95%; /* Wider container on mobile */
-        padding: 10px;
+        overflow-x: hidden;  /* Убираем горизонтальный скролл у контейнера */
+      }
+      header {
+        flex-direction: column; /*  Элементы хедера располагаются друг под другом */
+        align-items: center; /* Центрируем элементы по горизонтали */
+        padding: 10px; /* Уменьшаем padding */
     }
-     textarea {
-        height: 150px; /* Adjust as needed */
+
+    header nav {
+        margin-top: 10px; /*  Отступ сверху от заголовка */
+        display: flex;         /* Делаем nav flex-контейнером */
+        flex-direction: column; /* Располагаем ссылки друг под другом */
+        align-items: center; /* Центрируем ссылки */
     }
+
+    header nav a {
+        display: block;  /*  Занимаем всю ширину */
+        margin-bottom: 5px;  /*  Отступ между ссылками */
+        text-align: center;  /*  Центрируем текст ссылок */
+        padding: 5px; /*  Небольшой padding */
+        font-size: 14px;
+    }
+    .auth-buttons {
+        margin-top: 10px; /*  Отступ сверху от навигации */
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+
+      }
+
+    .auth-buttons .auth-btn{
+        margin-bottom: 5px; /* Отступ между кнопками */
+        width: 100%;
+
+    }
+    #open-profile-popup {
+        width: 100%;
+      }
+
 }

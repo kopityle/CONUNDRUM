@@ -80,7 +80,7 @@ async function generateCrossword(text, inputType, totalWords, res) {
 
     let prompt = '';
     if (inputType === 'topic') {
-      prompt = `Generate real ${totalWords} words related to the topic "${text}". For each word, provide a concise, accurate, and unambiguous definition, question, or short description suitable for a word puzzle. Ensure the clue directly relates to the word and is in the same language as the input topic.
+      prompt = `Generate real ${totalWords} words related to the topic "${text}". For each word, provide a concise, accurate, and unambiguous definition, question, or short description suitable for a word puzzle. Ensure the clue directly relates to the word and is in the same language as the input topic.If you are in doubt about the choice of language, then take Russian.
       Format the response as JSON:
       [
         {"word": "word1", "clue": "clue1"},
@@ -89,7 +89,7 @@ async function generateCrossword(text, inputType, totalWords, res) {
       ]
       Do not add anything outside the JSON structure. Ensure valid JSON.`;
     } else { // inputType === 'text' or 'file'
-      prompt = `Extract ${totalWords} keywords from the given text: "${text}". For each word, create a concise, accurate, and unambiguous definition, question, or short description. The clue must clearly relate to the meaning of the word within the provided text and be in the same language as the input text.
+      prompt = `Extract ${totalWords} keywords from the given text: "${text}". For each word, create a concise, accurate, and unambiguous definition, question, or short description. The clue must clearly relate to the meaning of the word within the provided text and be in the same language as the input text.If you are in doubt about the choice of language, then take Russian
       Format the response as JSON:
       [
         {"word": "word1", "clue": "clue1"},
@@ -127,8 +127,29 @@ async function generateCrossword(text, inputType, totalWords, res) {
 
     let wordsData;
     try {
-      wordsData = JSON.parse(messageContent);
-      console.log('Парсинг JSON успешен:', wordsData);
+        // Убираем обратные кавычки и "json" в начале, если они есть
+        let cleanedMessageContent = messageContent.replace(/```json/g, '').trim();
+        cleanedMessageContent = cleanedMessageContent.startsWith("'") && cleanedMessageContent.endsWith("'")
+        ? cleanedMessageContent.slice(1, -1)
+        : cleanedMessageContent;
+    
+        // Находим позицию первой закрывающей квадратной скобки
+        const closingBracketIndex = cleanedMessageContent.indexOf("]");
+    
+        // Если скобка найдена, обрезаем строку
+        const validJson = closingBracketIndex !== -1
+            ? cleanedMessageContent.substring(0, closingBracketIndex + 1).trim()
+            : cleanedMessageContent.trim();  // <--  Если скобки нет, используем всю строку
+    
+        wordsData = JSON.parse(validJson);
+        console.log('Парсинг JSON успешен:', wordsData);
+
+    // Проверяем структуру данных
+    if (!Array.isArray(wordsData) || !wordsData.every(item => typeof item === 'object' && item.hasOwnProperty('word') && item.hasOwnProperty('clue'))) {
+        console.error('Неверная структура данных от нейросети:', wordsData);
+        return res.status(500).send('Неверная структура данных от нейросети');
+    }
+
     } catch (parseError) {
       console.error('Ошибка при парсинге JSON:', parseError);
       console.error('Содержимое сообщения:', messageContent);

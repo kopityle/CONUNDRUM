@@ -45,7 +45,7 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
       displayError('Неверный тип ввода или файл не выбран.');
       return;
     }
-  
+    displayLoadingIndicator();  
     try {
       const response = await fetch('/generate-crossword', {
         method: 'POST',
@@ -69,9 +69,31 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
     } catch (error) {
       console.error(error);
       displayError(`Произошла ошибка: ${error.message}`);
-    }
-  });
-  
+    } finally {
+      // Скрыть индикатор загрузки, независимо от результата
+      hideLoadingIndicator();
+  }
+});
+function displayLoadingIndicator() {
+  // Скрыть подсказки вместе с кроссвордом
+  const cluesContainer = document.getElementById('clues-container');
+  cluesContainer.style.display = 'none';
+
+  const crosswordContainer = document.getElementById('crossword-container');
+  crosswordContainer.innerHTML = '<div class="loading-indicator">Загрузка...</div>';
+}
+
+function hideLoadingIndicator() {
+  const loadingIndicator = document.querySelector('.loading-indicator');
+  if (loadingIndicator) {
+      loadingIndicator.remove();
+  }
+
+  // Показать подсказки после загрузки
+  const cluesContainer = document.getElementById('clues-container');
+  cluesContainer.style.display = 'flex';
+}
+
   function displayCrossword(grid, words) {
     console.log("Grid in displayCrossword:", grid);
     console.log("Words in displayCrossword:", words);
@@ -151,17 +173,40 @@ function displayClues(words) {
 
     const acrossList = document.createElement('ul');
     acrossClues.forEach(wordData => {
-        const li = document.createElement('li');
-        li.textContent = `${wordData.position}. ${wordData.clue}`;
-        acrossList.appendChild(li);
-    });
+      const li = document.createElement('li');
+      li.textContent = `${wordData.position}. ${wordData.clue}`;
+      acrossList.appendChild(li);
+
+      const showAnswerButton = document.createElement('button');
+      showAnswerButton.textContent = 'Показать ответ';
+      showAnswerButton.classList.add('show-answer-button');
+      showAnswerButton.addEventListener('click', () => {
+          // Удаляем кнопку
+          showAnswerButton.remove();
+          // Добавляем ответ в текст подсказки
+          li.textContent += ` (${wordData.answer})`;
+      });
+      li.appendChild(showAnswerButton);
+  });
 
     const downList = document.createElement('ul');
     downClues.forEach(wordData => {
-        const li = document.createElement('li');
-        li.textContent = `${wordData.position}. ${wordData.clue}`; 
-        downList.appendChild(li);
-    });
+      // ... (код для downClues, скопируйте логику из acrossClues)
+      const li = document.createElement('li');
+      li.textContent = `${wordData.position}. ${wordData.clue}`;
+      downList.appendChild(li);
+
+      const showAnswerButton = document.createElement('button');
+      showAnswerButton.textContent = 'Показать ответ';
+      showAnswerButton.classList.add('show-answer-button');
+      showAnswerButton.addEventListener('click', () => {
+          // Удаляем кнопку
+          showAnswerButton.remove();
+          // Добавляем ответ в текст подсказки
+          li.textContent += ` (${wordData.answer})`;
+      });
+      li.appendChild(showAnswerButton);
+  });
 
     const acrossContainer = document.createElement('div');
     acrossContainer.classList.add('clues-section');
@@ -179,6 +224,7 @@ function displayClues(words) {
 
     cluesContainer.appendChild(acrossContainer);
     cluesContainer.appendChild(downContainer);
+
 }
 
 function displayError(message) {
