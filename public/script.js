@@ -1,4 +1,4 @@
-import { supabase, signUp, signIn, signOut, getUserData, updateProfile } from './config/SupabaseClient.js';
+import { supabase, signUp, signIn, signOut, getUserData, updateProfile} from './config/SupabaseClient.js';
 document.getElementById('crossword-form').addEventListener('submit', async (event) => {
     event.preventDefault();
   
@@ -61,16 +61,20 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
   
       if (data.crossword && data.words) {
         displayCrossword(data.crossword, data.layout.result);
-        console.log("data.layout.result:", data.layout.result);
-        displayClues(data.layout.result);
+        displayClues(data.layout.result);   
       } else {
         displayError('Не удалось получить данные кроссворда');
       }
     } catch (error) {
       console.error(error);
-      displayError(`Произошла ошибка: ${error.message}`);
-    } finally {
-      // Скрыть индикатор загрузки, независимо от результата
+
+      if (error.response && error.response.data && error.response.data.error) {
+          displayError(error.response.data.error); // <---  Вызываем displayError() с сообщением от сервера
+      } else {
+          displayError("Произошла ошибка при генерации кроссворда. Пожалуйста, попробуйте снова."); // <--- Вызываем displayError() с общим сообщением
+      }
+
+  } finally {
       hideLoadingIndicator();
   }
 });
@@ -94,70 +98,193 @@ function hideLoadingIndicator() {
   cluesContainer.style.display = 'flex';
 }
 
-  function displayCrossword(grid, words) {
-    console.log("Grid in displayCrossword:", grid);
-    console.log("Words in displayCrossword:", words);
-  
-    const crosswordContainer = document.getElementById('crossword-container');
-    crosswordContainer.innerHTML = '';
-  
-    if (!grid || !words) {
+function displayCrossword(grid, words) {
+  console.log("Grid in displayCrossword:", grid);
+  console.log("Words in displayCrossword:", words);
+
+  const crosswordContainer = document.getElementById('crossword-container');
+  crosswordContainer.innerHTML = '';
+
+  if (!grid || !words) {
       console.error("Grid or words are missing!");
       crosswordContainer.textContent = 'Не удалось получить данные кроссворда';
       return;
-    }
-  
-    const table = document.createElement('table');
-    table.classList.add('crossword-table');
-  
-    for (let row = 0; row < grid.length; row++) {
+  }
+
+  const table = document.createElement('table');
+  table.classList.add('crossword-table');
+
+  for (let row = 0; row < grid.length; row++) {
       const tr = document.createElement('tr');
       for (let col = 0; col < grid[row].length; col++) {
-        const td = document.createElement('td');
-        td.classList.add('crossword-cell');
-        td.contenteditable = true;
-  
-        if (grid[row][col] !== '') {
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.maxLength = 1;
-          input.classList.add('crossword-input');
-  
-          input.addEventListener('input', () => {
-            const userInput = input.value.toUpperCase();
-            const correctLetter = grid[row][col].toUpperCase();
-  
-            if (userInput === correctLetter) {
-              td.style.backgroundColor = '#c8e6c9';
-            } else {
-              td.style.backgroundColor = '#ffcdd2';
-            }
-          });
-  
-          const wordData = words.find(word =>
-            word.startx - 1 === col && word.starty - 1 === row && word.orientation !== 'none'
-          );
-  
-          if (wordData) {
-            const wordNumberSpan = document.createElement('span');
-            wordNumberSpan.textContent = wordData.position;
-            wordNumberSpan.classList.add('word-number');
-            td.appendChild(wordNumberSpan);
+          const td = document.createElement('td');
+          td.classList.add('crossword-cell');
+
+
+          if (grid[row][col] !== '') {
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.maxLength = 1;
+              input.classList.add('crossword-input');
+
+              input.addEventListener('input', (event) => { // <--- Добавили event
+                  const userInput = input.value.toUpperCase();
+                  const correctLetter = grid[row][col].toUpperCase();
+
+                  if (userInput === correctLetter) {
+                      td.style.backgroundColor = '#c8e6c9';
+                  } else {
+                      td.style.backgroundColor = '#ffcdd2';
+                  }
+
+                  // Автоматический переход к следующей ячейке
+                  if (input.value) {
+                      const nextInput = findNextInput(input, grid);
+                      if (nextInput) {
+                          nextInput.focus();
+                      }
+                  }
+                  checkCrosswordSolved(); // вызываем функцию для проверки решения после каждого ввода
+              });
+              input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); //  <---  Предотвращаем отправку формы
+                    const nextInput = findNextInput(input, grid);
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+            });
+
+              const wordData = words.find(word =>
+                  word.startx - 1 === col && word.starty - 1 === row && word.orientation !== 'none'
+              );
+
+              if (wordData) {
+                  const wordNumberSpan = document.createElement('span');
+                  wordNumberSpan.textContent = wordData.position;
+                  wordNumberSpan.classList.add('word-number');
+                  td.appendChild(wordNumberSpan);
+              }
+
+              td.appendChild(input);
+          } else {
+              td.classList.add('black-cell');
           }
-  
-          td.appendChild(input);
-        } else {
-          td.classList.add('black-cell');
-        }
-  
-        tr.appendChild(td);
+
+          tr.appendChild(td);
       }
       table.appendChild(tr);
-    }
-  
-    crosswordContainer.appendChild(table);
-    displayClues(words);
   }
+
+  crosswordContainer.appendChild(table);
+
+  const cells = table.querySelectorAll('.crossword-cell input'); //  <--- cells из table
+  cells.forEach(input => {
+      const row = input.parentNode.parentNode.rowIndex;
+      const col = input.parentNode.cellIndex;
+      input.parentNode.dataset.correctLetter = grid[row][col].toUpperCase();
+      // input.addEventListener('input', checkCrosswordSolved); // <--- Убрали отсюда, чтобы не вызывать дважды
+  });
+
+
+  displayClues(words);
+
+}
+
+
+
+function findNextInput(currentInput, grid) {
+  const currentCell = currentInput.parentNode;
+  const row = currentCell.parentNode.rowIndex;
+  const col = currentCell.cellIndex;
+
+  // Проверяем следующую ячейку по горизонтали
+  if (col + 1 < grid[row].length && grid[row][col + 1] !== '') {
+      const nextCell = currentCell.parentNode.cells[col + 1];
+      const nextInput = nextCell.querySelector('input');
+      if (nextInput) return nextInput;
+  }
+
+  // Проверяем следующую ячейку по вертикали
+  if (row + 1 < grid.length && grid[row + 1][col] !== '') {
+      const nextRow = currentCell.parentNode.parentNode.rows[row + 1];
+      const nextCell = nextRow.cells[col];
+      const nextInput = nextCell.querySelector('input');
+      if (nextInput) return nextInput;
+  }
+
+  // Если следующей ячейки нет, возвращаем null
+  return null;
+}
+
+function checkCrosswordSolved() {
+  const cells = document.querySelectorAll('.crossword-cell input');
+  let allCorrect = true;
+
+  cells.forEach(input => {
+      const userInput = input.value.toUpperCase();
+      const correctLetter = input.parentNode.dataset.correctLetter; // Используем dataset для хранения правильного ответа
+
+      if (userInput !== correctLetter) {
+          allCorrect = false;
+      }
+  });
+
+  if (allCorrect) {
+      displaySuccessMessage(); // Вызываем функцию для отображения сообщения об успехе
+  }
+}
+
+
+function displaySuccessMessage() {
+  const crosswordContainer = document.getElementById('crossword-container');
+  const cluesContainer = document.getElementById('clues-container'); // Получаем контейнер подсказок
+
+  crosswordContainer.innerHTML = ''; // Очищаем контейнер
+  cluesContainer.innerHTML = '';     // Очищаем контейнер подсказок
+  const successMessage = document.createElement('div');
+  successMessage.classList.add('success-message');
+  successMessage.textContent = 'Поздравляем! Вы решили кроссворд!';
+  // Дополнительно: можно добавить анимацию или другие эффекты к сообщению
+  crosswordContainer.appendChild(successMessage); // Добавляем сообщение
+    // // После отображения сообщения об успехе, инкрементируем счетчик
+    // const user = supabase.auth.user(); // Получаем текущего пользователя
+    // if (user) {
+    //     incrementCrosswordCount(user.id);
+    // } else {
+    //   console.error("Пользователь не авторизован!");
+    // }
+}
+
+// // Вызываем эту функцию после успешной авторизации или при загрузке страницы, если пользователь уже авторизован
+// async function initializeUserProfile() {
+// const user = supabase.auth.user();
+// if (user) {
+//   try {
+//     const { data, error } = await supabase
+//       .from('users')
+//       .select('crosswords_solved')
+//       .eq('id', user.id)
+//       .single();
+//     if (error) {
+//       console.error("Ошибка получения данных профиля:", error);
+//     } else {
+//       updateCrosswordCountUI(data.crosswords_solved || 0); // Обновляем UI счетчиком или 0, если счетчика еще нет
+//     }
+//   } catch (error) {
+//     console.error("Ошибка получения данных профиля:", error)
+//   }
+// }
+// }
+
+async function updateCrosswordCountUI(count) {  // <--- Одна функция updateCrosswordCountUI
+  const countElement = document.getElementById('crossword-count'); 
+  if (countElement) {
+      countElement.textContent = `Решено кроссвордов: ${count}`; // Добавляем текст для ясности
+  }
+}
+
 
 function displayClues(words) {
     const cluesContainer = document.getElementById('clues-container');
@@ -288,30 +415,60 @@ class PopupManager {
 
 // Auth Management
 class AuthManager {
- static async handleRegistration(event) {
-  event.preventDefault();
-  try {
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    const username = document.getElementById('register-username').value;
-    const age = document.getElementById('register-age').value || null;
-    const gender = document.getElementById('register-gender').value || null;
-    const occupation = document.getElementById('register-occupation').value || null;
+  static async handleRegistration(event) {
+    event.preventDefault();
+    try {
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const username = document.getElementById('register-username').value;
+        const age = document.getElementById('register-age').value || null;
+        const gender = document.getElementById('register-gender').value || null;
+        const occupation = document.getElementById('register-occupation').value || null;
 
-    const result = await signUp(email, password, username, age, gender, occupation);
-    
-    if (result) {
-      this.showSuccessMessage('Регистрация успешна!');
-      PopupManager.close(elements.registerPopup);
-      
-      const loginResult = await signIn(email, password);
-      if (loginResult) {
-        await this.updateProfileUI(loginResult.user);
-      }
+        const result = await signUp(email, password, username, age, gender, occupation);
+
+        if (result) {
+            this.showSuccessMessage('Регистрация успешна!');
+            PopupManager.close(elements.registerPopup);
+            // try {
+            //     // Добавляем пользователя в таблицу users
+            //     const { error } = await supabase
+            //         .from('users')
+            //         .insert([
+            //             {
+            //                 id: result.user.id,
+            //                 email: result.user.email,
+            //                 username: username,
+            //                 age: age,
+            //                 gender: gender,
+            //                 occupation: occupation,
+            //                 crosswords_solved: 0 //  Устанавливаем начальное значение счетчика
+            //             },
+            //         ]);
+
+            //     if (error) {
+            //         console.error('Ошибка добавления пользователя в таблицу users:', error);
+            //         this.showErrorMessage('Ошибка при создании профиля: ' + error.message); //  <-  Сообщение об ошибке
+            //         // Дополнительные действия при ошибке, например, откат регистрации в Supabase Auth
+            //         return; //  <-  Останавливаем выполнение, если произошла ошибка
+            //     } else {
+            //         console.log('Пользователь успешно добавлен в таблицу users');
+            //     }
+
+                const loginResult = await signIn(email, password);
+                if (loginResult) {
+                    await this.updateProfileUI(loginResult.user);
+                }
+            // } catch (error) {
+            //     console.error("Ошибка при добавлении пользователя в users:", error);
+            //     this.showErrorMessage('Ошибка при создании профиля: ' + error.message);  //  <-  Сообщение об ошибке
+            //     // Дополнительные действия при ошибке
+            // }
+
+        }
+    } catch (error) {
+        this.showErrorMessage('Ошибка регистрации: ' + error.message);
     }
-  } catch (error) {
-    this.showErrorMessage('Ошибка регистрации: ' + error.message);
-  }
 }
 
   // И метод handleLogin
@@ -349,21 +506,74 @@ class AuthManager {
       const { data: { user: currentUser }, error } = await supabase.auth.getUser();
 
       if (error) throw error;
+        // const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
 
-      if (currentUser) {
-        elements.profileUsername.textContent = currentUser.user_metadata.username || currentUser.email;
-        elements.profileEmail.textContent = currentUser.email;
-        document.getElementById('profile-age').value = currentUser.user_metadata.age || '';
-        document.getElementById('profile-gender').value = currentUser.user_metadata.gender || '';
-        document.getElementById('profile-occupation').value = currentUser.user_metadata.occupation || '';
-        
-        this.showProfileButton();
-      }
+        // if (authError) {
+        //     console.error('Ошибка аутентификации:', authError);
+        //     this.showErrorMessage('Ошибка аутентификации: ' + authError.message);
+        //     return; // Прерываем выполнение функции, если ошибка аутентификации
+        // }
+
+        if (currentUser) {
+            elements.profileUsername.textContent = currentUser.user_metadata.username || currentUser.email;
+            elements.profileEmail.textContent = currentUser.email;
+            document.getElementById('profile-age').value = currentUser.user_metadata.age || '';
+            document.getElementById('profile-gender').value = currentUser.user_metadata.gender || '';
+            document.getElementById('profile-occupation').value = currentUser.user_metadata.occupation || '';
+
+            this.showProfileButton();
+            // console.log("User ID:", currentUser.id);
+
+            // try { // Отдельный try...catch для запроса к Supabase
+            //     const { data: countData, error: countError } = await supabase
+            //         .from('users')
+            //         .select('crosswords_solved')
+            //         .eq('id', currentUser.id)
+            //         .single();
+
+            //     console.log("Supabase response:", { countData, countError });
+
+            //     if (countError) {
+            //         console.error('Ошибка получения счетчика:', countError);
+            //         if (countError.code === 'PGRST116') { // Проверяем код ошибки, если нет строки
+            //           // Добавляем пользователя в таблицу users, если его там нет
+            //           const { error: insertError } = await supabase
+            //             .from('users')
+            //             .insert([{
+            //               id: currentUser.id,
+            //               email: currentUser.email,
+            //               username: currentUser.user_metadata.username,
+            //               age: currentUser.user_metadata.age || null,
+            //               gender: currentUser.user_metadata.gender || null,
+            //               occupation: currentUser.user_metadata.occupation || null,
+            //               crosswords_solved: 0
+            //             }]);
+            //           if (insertError) {
+            //             console.error("Ошибка добавления пользователя в таблицу 'users':", insertError);
+            //             updateCrosswordCountUI(0); //  Устанавливаем счетчик в 0 при ошибке
+            //             return;
+            //           } else {
+            //             updateCrosswordCountUI(0); // Устанавливаем начальное значение счетчика
+            //           }
+            //         } else {
+            //             // Другие ошибки Supabase
+            //             updateCrosswordCountUI(0); //  Устанавливаем счетчик в 0 при ошибке
+            //         }
+            //     } else {
+            //         updateCrosswordCountUI(countData.crosswords_solved || 0);
+            //     }
+
+            // } catch (error) { // Ловим все ошибки запроса к базе данных
+            //     console.error("Ошибка при получении данных из Supabase:", error);
+            //     this.showErrorMessage("Ошибка при загрузке данных профиля: " + error.message);
+            //     updateCrosswordCountUI(0); //  Устанавливаем счетчик в 0 при ошибке
+            // }
+        }
     } catch (error) {
-      console.error('Error updating profile UI:', error);
-      this.showErrorMessage('Ошибка при обновлении интерфейса профиля: ' + error.message);
+        console.error('Error updating profile UI:', error);
+        this.showErrorMessage('Ошибка при обновлении интерфейса профиля: ' + error.message);
     }
-  }
+}
 
   static async updateProfile(event) {
     event.preventDefault();
@@ -464,9 +674,6 @@ function initializeEventListeners() {
   elements.profileForm.addEventListener('submit', (e) => AuthManager.updateProfile(e));
 }
 
-
-
-// Initialize
 function initialize() {
   AuthManager.showAuthButtons();
   initializeEventListeners();

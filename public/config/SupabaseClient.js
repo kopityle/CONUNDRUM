@@ -110,4 +110,27 @@ async function updateProfile(userId, updates) {
     }
 }
 
-export { supabase, signUp, signIn, signOut, getUserData, updateProfile };
+// async function incrementCrosswordCount(userId) {
+//     try {
+//         const { data, error } = await supabase
+//             .from('users') // Название вашей таблицы в Supabase
+//             .update({ crosswords_solved: supabase.inc(1) }) // Инкрементируем счетчик
+//             .eq('id', userId); // Фильтруем по user ID
+
+//         if (error) {
+//             console.error('Ошибка обновления счетчика:', error);
+//             // Обработка ошибки (например, отображение сообщения пользователю)
+//             return;
+//         }
+
+//         console.log('Счетчик обновлен:', data);
+//         // Обновление UI (если нужно отобразить счетчик)
+//         updateCrosswordCountUI(data[0].crosswords_solved);
+
+//     } catch (error) {
+//         console.error('Ошибка при инкременте счетчика:', error);
+//         // Обработка ошибки
+//     }
+// }
+
+export { supabase, signUp, signIn, signOut, getUserData, updateProfile}

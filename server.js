@@ -9,7 +9,7 @@ const { SupabaseClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-const port = 8089;
+const port = 8086;
 const publicPath = path.join(__dirname, 'public');
 
 const storage = multer.memoryStorage();
@@ -26,9 +26,9 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_KEY;
 
 app.post('/generate-crossword', upload.single('file-upload'), async (req, res) => {
-  console.log('Получен запрос на генерацию кроссворда:', req.body.inputType);
-  console.log('req.file:', req.file);
-  console.log('req.body:', req.body);
+  // console.log('Получен запрос на генерацию кроссворда:', req.body.inputType);
+  // console.log('req.file:', req.file);
+  // console.log('req.body:', req.body);
 
   const inputType = req.body.inputType;
   const totalWords = parseInt(req.body.totalWords);
@@ -47,7 +47,7 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
 
       if (fileExtension === '.txt') {
         text = fileBuffer.toString('utf-8');
-        console.log('Текст из .txt файла:', text);
+        // console.log('Текст из .txt файла:', text);
         generateCrossword(text, inputType, totalWords, res);
       } else if (fileExtension === '.docx') {
         // Обработка .docx
@@ -74,6 +74,7 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
 
 //  Функция для обработки текста и генерации кроссворда
 async function generateCrossword(text, inputType, totalWords, res) {
+  
   try {
     // Очищаем текст, удаляя лишние пробелы и переносы строк
     text = text.trim().replace(/\s+/g, ' ');
@@ -98,7 +99,7 @@ async function generateCrossword(text, inputType, totalWords, res) {
       ]
       Do not add anything outside the JSON structure. Ensure valid JSON.`;
     }
-    console.log('Промпт, который отправляется нейросети:', prompt); // Добавлен console.log
+    // console.log('Промпт, который отправляется нейросети:', prompt); // Добавлен console.log
 
     const response = await axios.post(openrouterApiUrl, {
       model: "google/gemma-2-9b-it:free",
@@ -118,58 +119,103 @@ async function generateCrossword(text, inputType, totalWords, res) {
 
     console.log('Ответ от нейросети:', response.data);
 
-    const messageContent = response.data.choices && 
-                            response.data.choices[0] && 
-                            response.data.choices[0].message && 
-                            response.data.choices[0].message.content;
+    let messageContent = response.data.choices?.[0]?.message?.content;
 
-    console.log('Содержимое сообщения от нейросети:', messageContent);
+    if (!messageContent || messageContent.trim().length === 0) {
+      console.error("Нейросеть не сгенерировала текст.");
+      res.status(500).send({
+          error: "Нейросеть не сгенерировала текст. Попробуйте изменить запрос или повторите попытку позже."
+      });
+      return;
+  }
 
-    let wordsData;
-    try {
-        // Убираем обратные кавычки и "json" в начале, если они есть
-        let cleanedMessageContent = messageContent.replace(/```json/g, '').trim();
-        cleanedMessageContent = cleanedMessageContent.startsWith("'") && cleanedMessageContent.endsWith("'")
-        ? cleanedMessageContent.slice(1, -1)
-        : cleanedMessageContent;
-    
-        // Находим позицию первой закрывающей квадратной скобки
-        const closingBracketIndex = cleanedMessageContent.indexOf("]");
-    
-        // Если скобка найдена, обрезаем строку
-        const validJson = closingBracketIndex !== -1
-            ? cleanedMessageContent.substring(0, closingBracketIndex + 1).trim()
-            : cleanedMessageContent.trim();  // <--  Если скобки нет, используем всю строку
-    
-        wordsData = JSON.parse(validJson);
-        console.log('Парсинг JSON успешен:', wordsData);
+    // console.log('Содержимое сообщения от нейросети:', messageContent);
 
-    // Проверяем структуру данных
-    if (!Array.isArray(wordsData) || !wordsData.every(item => typeof item === 'object' && item.hasOwnProperty('word') && item.hasOwnProperty('clue'))) {
-        console.error('Неверная структура данных от нейросети:', wordsData);
-        return res.status(500).send('Неверная структура данных от нейросети');
-    }
+      let originalContent = messageContent.replace(/```json/g, '').trim();
+      let cleanedMessageContent = originalContent;
+      
+      // 1. Удаление одинарных кавычек по краям
+      if (cleanedMessageContent.startsWith("'") && cleanedMessageContent.endsWith("'")) {
+          cleanedMessageContent = cleanedMessageContent.slice(1, -1);
+          console.log("Удалены одинарные кавычки по краям.");
+      }
+      
+      // 2. Удаление бэкслешей перед кавычками
+      cleanedMessageContent = cleanedMessageContent.replace(/\\"/g, '"'); // <---  Улучшено:  удаляем всегда, не нужно проверять includes
+      
+      // 3. Удаление лишних точек
+      cleanedMessageContent = cleanedMessageContent.replace(/\.{5,}/g, ''); // <--- Улучшено: удаляем всегда
+      
+      // 4. Находим начало и конец JSON (и обрезаем лишний текст)
+      const startIndex = cleanedMessageContent.indexOf('[');
+      const endIndex = cleanedMessageContent.lastIndexOf(']');
+      
+      if (startIndex !== -1 && endIndex !== -1 && (startIndex > 0 || endIndex < cleanedMessageContent.length - 1) ) {
+          cleanedMessageContent = cleanedMessageContent.substring(startIndex, endIndex + 1);
+          console.log("Обрезан лишний текст до или после JSON.");
+      }
+      
+      // 5. Удаление непечатаемых символов, \r, \n и •
+      cleanedMessageContent = cleanedMessageContent.replace(/[\u0000-\u001F\u007F-\u009F•\r\n]+/g, "");
+      
+      // 6. Удаление лишних пробелов (в конце!)
+      cleanedMessageContent = cleanedMessageContent.trim();
+      if (originalContent !== cleanedMessageContent) {
+        console.log("Произведена очистка JSON. Исходный текст:", originalContent);
+        console.log("Очищенный текст:", cleanedMessageContent);
+      }
+    // Удаляем запятую после последнего элемента массива
+    cleanedMessageContent = cleanedMessageContent.replace(/,\s*\]$/, ']');
+    console.log("Текст перед парсингом:", cleanedMessageContent);
 
-    } catch (parseError) {
-      console.error('Ошибка при парсинге JSON:', parseError);
-      console.error('Содержимое сообщения:', messageContent);
-      return res.status(500).send('Неверный формат данных от нейросети');
-    }
+    if (originalContent !== cleanedMessageContent) {
+      console.log("Произведена очистка JSON. Исходный текст:", originalContent);
+      console.log("Очищенный текст:", cleanedMessageContent);
+  }
 
-    const layout = clg.generateLayout(wordsData.map(item => ({ answer: item.word, clue: item.clue })));
-    const crosswordGrid = createGridFromLayout(layout, wordsData);
+  console.log("Текст перед парсингом:", cleanedMessageContent);
 
-    res.json({
+  let wordsData;
+
+  try {
+      wordsData = JSON.parse(cleanedMessageContent);
+  } catch (jsonError) {
+      console.error("Ошибка парсинга JSON:", jsonError);
+      console.error("Содержимое сообщения (после очистки):", cleanedMessageContent);
+
+      res.status(500).send({
+          error: "Нейросеть вернула невалидный JSON. Попробуйте повторить запрос.",
+          originalMessage: messageContent,
+          cleanedMessage: cleanedMessageContent
+      });
+      return;
+  }
+
+  // Проверка структуры данных после парсинга
+  if (!Array.isArray(wordsData) || !wordsData.every(item => typeof item === 'object' && item.hasOwnProperty('word') && item.hasOwnProperty('clue'))) {
+      console.error('Неверная структура данных от нейросети:', wordsData);
+      return res.status(500).send('Неверная структура данных от нейросети');
+  }
+
+  // Генерация кроссворда
+  const layout = clg.generateLayout(wordsData.map(item => ({
+      answer: item.word,
+      clue: item.clue
+  })));
+  const crosswordGrid = createGridFromLayout(layout, wordsData);
+
+  res.json({
       crossword: crosswordGrid,
       words: wordsData,
       rawResponse: response.data,
       parsedWords: wordsData,
       layout: layout
-    });
-  } catch (error) {
-    console.error('Ошибка API запроса:', error.response ? error.response.data : error.message);
-    res.status(500).send('Ошибка API запроса');
-  }
+  });
+
+} catch (apiError) { // обработка ошибки API запроса
+  console.error('Ошибка API запроса:', apiError.response ? apiError.response.data : apiError.message);
+  res.status(500).send('Ошибка API запроса');
+}
 }
 // Отправка данных в SupabaseClient
 app.get('/supabase-config', (req, res) => {
@@ -198,7 +244,7 @@ function createGridFromLayout(layout, wordsData) {
       wordData.clue = clue;
     }
   });
-  console.log("Generated grid:", grid);
+  // console.log("Generated grid:", grid);
   return grid;
 }
 

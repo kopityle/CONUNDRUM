@@ -165,7 +165,13 @@ button:hover::before {
 h1 {
     font-family: 'Press Start 2P', monospace; 
 } 
-
+.success-message {
+    font-size: 20px;
+    color: green;
+    text-align: center; /* или любое другое выравнивание */
+    padding: 20px;
+    /* Добавьте другие стили по вашему усмотрению */
+}
 
 .crossword-cell {
     border: 1px solid black;
