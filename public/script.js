@@ -1,4 +1,5 @@
-import { supabase, signUp, signIn, signOut, getUserData, updateProfile} from './config/SupabaseClient.js';
+import { supabase, signUp, signIn, signOut} from './config/SupabaseClient.js';
+
 document.getElementById('crossword-form').addEventListener('submit', async (event) => {
     event.preventDefault();
   
@@ -7,11 +8,9 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
     const totalWords = parseInt(document.getElementById('total-words').value);
     const topic = document.getElementById('topic').value;
     const fileInput = document.getElementById('file-upload');
-      // --- Проверка на пустые поля ---
-      if (inputType === '') {
-        return displayError('Выберите тип ввода.');
+    if (inputType === '') {
+      return displayError('Выберите тип ввода.');
     }
-
     if (inputType === 'text' && documentText.trim() === '') {
         return displayError('Введите текст.');
     }
@@ -24,60 +23,46 @@ document.getElementById('crossword-form').addEventListener('submit', async (even
         return displayError('Выберите файл.');
     }
 
-    // Проверка на число слов
     if (isNaN(totalWords) || totalWords < 1) {
         return displayError('Введите корректное количество слов (больше 0).');
     }
-    // Создаем FormData
-    const formData = new FormData();
-  
-    formData.append('inputType', inputType);
-    formData.append('totalWords', totalWords);
-  
-    if (inputType === 'text') {
-      formData.append('text', documentText);
-    } else if (inputType === 'file' && fileInput.files[0]) {
-      formData.append('file-upload', fileInput.files[0]); //  Добавляем файл в formData
-      console.log("Файл в formData:", fileInput.files[0]); //  Проверка файла
-    } else if (inputType === 'topic') {
-      formData.append('topic', topic);
-    } else {
-      displayError('Неверный тип ввода или файл не выбран.');
-      return;
-    }
-    displayLoadingIndicator();  
+
+    displayLoadingIndicator();
+
     try {
-      const response = await fetch('/generate-crossword', {
-        method: 'POST',
-        // Удаляем headers: { 'Content-Type': 'application/json' }
-        body: formData // Отправляем formData
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Ошибка при отправке запроса: ${response.status}`);
-      }
-  
-      const data = await response.json();
-  
-      if (data.crossword && data.words) {
-        displayCrossword(data.crossword, data.layout.result);
-        displayClues(data.layout.result);   
-      } else {
-        displayError('Не удалось получить данные кроссворда');
-      }
+        const response = await fetch('/generate-crossword', {
+            method: 'POST',
+            body: new FormData(event.target),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка при отправке запроса: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.crossword && data.words) {
+            displayCrossword(data.crossword, data.layout.result);
+            displayClues(data.layout.result);
+        } else {
+            displayError('Не удалось получить данные кроссворда');
+        }
     } catch (error) {
-      console.error(error);
+        console.error(error);
 
-      if (error.response && error.response.data && error.response.data.error) {
-          displayError(error.response.data.error); // <---  Вызываем displayError() с сообщением от сервера
-      } else {
-          displayError("Произошла ошибка при генерации кроссворда. Пожалуйста, попробуйте снова."); // <--- Вызываем displayError() с общим сообщением
-      }
-
-  } finally {
-      hideLoadingIndicator();
-  }
+        if (error.response && error.response.data && error.response.data.error) {
+            displayError(error.response.data.error);
+        } else {
+            displayError("Произошла ошибка при генерации кроссворда. Пожалуйста, попробуйте снова.");
+        }
+    } finally {
+        hideLoadingIndicator();
+    }
 });
+/**
+ * Displays a loading indicator in the crossword container
+ * and hides the clues container
+ */
 function displayLoadingIndicator() {
   // Скрыть подсказки вместе с кроссвордом
   const cluesContainer = document.getElementById('clues-container');
@@ -111,85 +96,58 @@ function displayCrossword(grid, words) {
       return;
   }
 
-  const table = document.createElement('table');
-  table.classList.add('crossword-table');
-
-  for (let row = 0; row < grid.length; row++) {
-      const tr = document.createElement('tr');
-      for (let col = 0; col < grid[row].length; col++) {
-          const td = document.createElement('td');
-          td.classList.add('crossword-cell');
-
-
-          if (grid[row][col] !== '') {
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.maxLength = 1;
-              input.classList.add('crossword-input');
-
-              input.addEventListener('input', (event) => { // <--- Добавили event
-                  const userInput = input.value.toUpperCase();
-                  const correctLetter = grid[row][col].toUpperCase();
-
-                  if (userInput === correctLetter) {
-                      td.style.backgroundColor = '#c8e6c9';
-                  } else {
-                      td.style.backgroundColor = '#ffcdd2';
-                  }
-
-                  // Автоматический переход к следующей ячейке
-                  if (input.value) {
-                      const nextInput = findNextInput(input, grid);
-                      if (nextInput) {
-                          nextInput.focus();
-                      }
-                  }
-                  checkCrosswordSolved(); // вызываем функцию для проверки решения после каждого ввода
-              });
-              input.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault(); //  <---  Предотвращаем отправку формы
-                    const nextInput = findNextInput(input, grid);
-                    if (nextInput) {
-                        nextInput.focus();
-                    }
-                }
-            });
-
+  const tableHTML = grid.map((row, rowIndex) => {
+      return `<tr>${row.map((cell, colIndex) => {
+          if (cell !== '') {
               const wordData = words.find(word =>
-                  word.startx - 1 === col && word.starty - 1 === row && word.orientation !== 'none'
+                  word.startx - 1 === colIndex && word.starty - 1 === rowIndex && word.orientation !== 'none'
               );
 
-              if (wordData) {
-                  const wordNumberSpan = document.createElement('span');
-                  wordNumberSpan.textContent = wordData.position;
-                  wordNumberSpan.classList.add('word-number');
-                  td.appendChild(wordNumberSpan);
-              }
+              const wordNumberHTML = wordData ? `<span class="word-number">${wordData.position}</span>` : '';
 
-              td.appendChild(input);
+              return `<td class="crossword-cell" data-correct-letter="${cell.toUpperCase()}">${wordNumberHTML}<input type="text" maxlength="1" class="crossword-input"></td>`;
           } else {
-              td.classList.add('black-cell');
+              return `<td class="black-cell"></td>`;
           }
+      }).join('')}</tr>`;
+  }).join('');
 
-          tr.appendChild(td);
-      }
-      table.appendChild(tr);
-  }
+  const table = document.createElement('table');
+  table.classList.add('crossword-table');
+  table.innerHTML = tableHTML;
 
   crosswordContainer.appendChild(table);
 
-  const cells = table.querySelectorAll('.crossword-cell input'); //  <--- cells из table
-  cells.forEach(input => {
-      const row = input.parentNode.parentNode.rowIndex;
-      const col = input.parentNode.cellIndex;
-      input.parentNode.dataset.correctLetter = grid[row][col].toUpperCase();
-      // input.addEventListener('input', checkCrosswordSolved); // <--- Убрали отсюда, чтобы не вызывать дважды
+  const tableElement = crosswordContainer.querySelector('table');
+  tableElement.addEventListener('input', (event) => {
+      const input = event.target;
+      const userInput = input.value.toUpperCase();
+      const correctLetter = input.parentNode.dataset.correctLetter;
+
+      if (userInput === correctLetter) {
+          input.parentNode.style.backgroundColor = '#c8e6c9';
+      } else {
+          input.parentNode.style.backgroundColor = '#ffcdd2';
+      }
+
+      const nextInput = findNextInput(input, grid);
+      if (nextInput) {
+          nextInput.focus();
+      }
+      checkCrosswordSolved(); // вызываем функцию для проверки решения после каждого ввода
   });
 
+  tableElement.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault(); //  <---  Предотвращаем отправку формы
+        const nextInput = findNextInput(event.target, grid);
+        if (nextInput) {
+            nextInput.focus();
+        }
+    }
+  });
 
   displayClues(words);
-
 }
 
 
@@ -220,20 +178,17 @@ function findNextInput(currentInput, grid) {
 
 function checkCrosswordSolved() {
   const cells = document.querySelectorAll('.crossword-cell input');
-  let allCorrect = true;
 
-  cells.forEach(input => {
-      const userInput = input.value.toUpperCase();
-      const correctLetter = input.parentNode.dataset.correctLetter; // Используем dataset для хранения правильного ответа
+  for (const input of cells) {
+    const userInput = input.value.toUpperCase();
+    const correctLetter = input.parentNode.dataset.correctLetter; // Используем dataset для хранения правильного ответа
 
-      if (userInput !== correctLetter) {
-          allCorrect = false;
-      }
-  });
-
-  if (allCorrect) {
-      displaySuccessMessage(); // Вызываем функцию для отображения сообщения об успехе
+    if (userInput !== correctLetter) {
+      return; // Прерываем, если найдена неверная буква
+    }
   }
+
+  displaySuccessMessage(); // Вызываем функцию для отображения сообщения об успехе, если все буквы верны
 }
 
 
@@ -278,80 +233,45 @@ function displaySuccessMessage() {
 // }
 // }
 
-async function updateCrosswordCountUI(count) {  // <--- Одна функция updateCrosswordCountUI
-  const countElement = document.getElementById('crossword-count'); 
-  if (countElement) {
-      countElement.textContent = `Решено кроссвордов: ${count}`; // Добавляем текст для ясности
-  }
-}
 
 
 function displayClues(words) {
     const cluesContainer = document.getElementById('clues-container');
     cluesContainer.innerHTML = '';
 
-    console.log("Words in displayClues:", words);
-
     const acrossClues = words.filter(wordData => wordData.orientation === 'across');
     const downClues = words.filter(wordData => wordData.orientation === 'down');
 
-    console.log("acrossClues:", acrossClues);
-    console.log("downClues:", downClues);
+    const createClueList = (clues, title) => {
+        const list = document.createElement('ul');
+        clues.forEach(wordData => {
+            const li = document.createElement('li');
+            li.textContent = `${wordData.position}. ${wordData.clue}`;
+            const showAnswerButton = document.createElement('button');
+            showAnswerButton.textContent = 'Показать ответ';
+            showAnswerButton.classList.add('show-answer-button');
+            showAnswerButton.addEventListener('click', () => {
+                showAnswerButton.remove();
+                li.textContent += ` (${wordData.answer})`;
+            });
+            li.appendChild(showAnswerButton);
+            list.appendChild(li);
+        });
 
-    const acrossList = document.createElement('ul');
-    acrossClues.forEach(wordData => {
-      const li = document.createElement('li');
-      li.textContent = `${wordData.position}. ${wordData.clue}`;
-      acrossList.appendChild(li);
+        const container = document.createElement('div');
+        container.classList.add('clues-section');
+        const titleElement = document.createElement('h3');
+        titleElement.textContent = title;
+        container.appendChild(titleElement);
+        container.appendChild(list);
+        return container;
+    };
 
-      const showAnswerButton = document.createElement('button');
-      showAnswerButton.textContent = 'Показать ответ';
-      showAnswerButton.classList.add('show-answer-button');
-      showAnswerButton.addEventListener('click', () => {
-          // Удаляем кнопку
-          showAnswerButton.remove();
-          // Добавляем ответ в текст подсказки
-          li.textContent += ` (${wordData.answer})`;
-      });
-      li.appendChild(showAnswerButton);
-  });
-
-    const downList = document.createElement('ul');
-    downClues.forEach(wordData => {
-      // ... (код для downClues, скопируйте логику из acrossClues)
-      const li = document.createElement('li');
-      li.textContent = `${wordData.position}. ${wordData.clue}`;
-      downList.appendChild(li);
-
-      const showAnswerButton = document.createElement('button');
-      showAnswerButton.textContent = 'Показать ответ';
-      showAnswerButton.classList.add('show-answer-button');
-      showAnswerButton.addEventListener('click', () => {
-          // Удаляем кнопку
-          showAnswerButton.remove();
-          // Добавляем ответ в текст подсказки
-          li.textContent += ` (${wordData.answer})`;
-      });
-      li.appendChild(showAnswerButton);
-  });
-
-    const acrossContainer = document.createElement('div');
-    acrossContainer.classList.add('clues-section');
-    const acrossTitle = document.createElement('h3');
-    acrossTitle.textContent = 'По  горизонтали';
-    acrossContainer.appendChild(acrossTitle);
-    acrossContainer.appendChild(acrossList); 
-
-    const downContainer = document.createElement('div');
-    downContainer.classList.add('clues-section');
-    const downTitle = document.createElement('h3');
-    downTitle.textContent = 'По  вертикали';
-    downContainer.appendChild(downTitle);
-    downContainer.appendChild(downList); 
+    const acrossContainer = createClueList(acrossClues, 'По  горизонтали');
+    const downContainer = createClueList(downClues, 'По  вертикали');
 
     cluesContainer.appendChild(acrossContainer);
     cluesContainer.appendChild(downContainer);
-
 }
 
 function displayError(message) {
