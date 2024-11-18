@@ -5,7 +5,6 @@ const clg = require('crossword-layout-generator')
 const multer = require('multer');
 const DocxParser = require('docx-parser');
 const pdf = require('pdf-parse');
-const { SupabaseClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
@@ -34,13 +33,13 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
   const totalWords = parseInt(req.body.totalWords);
   let text = '';
 
-  if (inputType === 'text') {
-    text = req.body.text;
+      if (inputType === 'text') {
+          text = req.body.text;
     generateCrossword(text, inputType, totalWords, res);
-  } else if (inputType === 'topic') {
-    text = req.body.topic;
+      } else if (inputType === 'topic') {
+          text = req.body.topic;
     generateCrossword(text, inputType, totalWords, res);
-  } else if (inputType === 'file' && req.file) {
+      } else if (inputType === 'file' && req.file) {
     try {
       const fileBuffer = req.file.buffer; // Файл в буфере
       const fileExtension = path.extname(req.file.originalname).toLowerCase();
@@ -63,10 +62,10 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
       } else {
         return res.status(400).send('Неподдерживаемый тип файла.');
       }
-    } catch (err) {
+  } catch (err) {
       console.error('Ошибка при работе с файлом:', err);
       return res.status(500).send('Ошибка при работе с файлом.');
-    }
+      }
   } else {
     return res.status(400).send('Неверный тип ввода.');
   }
@@ -105,19 +104,19 @@ async function generateCrossword(text, inputType, totalWords, res) {
       model: "google/gemma-2-9b-it:free",
       messages: [{ role: "user", content: prompt }],
       top_p: 1,
-      temperature: 0.7,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+      temperature: 0.2,
+      frequency_penalty: 0.8,
+      presence_penalty: 0.8,
       repetition_penalty: 1,
-      top_k: 0
+      top_k: 50
     }, {
       headers: {
         'Authorization': `Bearer ${openrouterApiKey}`,
         'Content-Type': 'application/json'
       }
     });
-
-    console.log('Ответ от нейросети:', response.data);
+    console.timeEnd('OpenRouter API request'); // <--- Конец замера
+    // console.log('Ответ от нейросети:', response.data);
 
     let messageContent = response.data.choices?.[0]?.message?.content;
 

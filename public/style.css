@@ -96,7 +96,6 @@ button:hover::before {
     margin: 20px auto;
 }
 .crossword-table td {
-    border: 1px solid #000;
     width: 30px;
     height: 30px;
     position: relative;
@@ -121,9 +120,6 @@ button:hover::before {
     background-color: #e0f7fa;
 }
 
-.black-cell {
-    background-color: #000;
-}
 
 .clues-container {
     display: flex;
@@ -187,10 +183,6 @@ h1 {
     background-color: #e0f7fa;
 }
 
-.black-cell {
-    background-color: black;
-}
-
 
 #clues-container {
     display: flex;
@@ -211,14 +203,15 @@ h1 {
 }
 
 #crossword-form label,
-#crossword-form input,
 #crossword-form select,
+#topic,
 #crossword-form textarea,
 #crossword-form button {
     box-sizing: border-box; /*  Включаем padding и border в ширину */
     display: block;  /*  Каждый элемент на новой строке */
     margin-bottom: 10px; /*  Отступ снизу */
-    margin: 0 auto
+    margin: 0 auto;
+    margin-top: 10px;
 }
 
 #crossword-form input[type="number"] {
