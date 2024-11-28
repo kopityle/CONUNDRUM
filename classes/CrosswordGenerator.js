@@ -1,12 +1,30 @@
+// Импорт необходимых модулей
 const axios = require('axios');
 const clg = require('crossword-layout-generator');
 
+/**
+ * Класс для генерации кроссвордов
+ * Использует OpenRouter API для генерации слов и подсказок,
+ * и crossword-layout-generator для создания сетки кроссворда
+ */
 class CrosswordGenerator {
+    /**
+     * Создает экземпляр генератора кроссвордов
+     * @param {string} apiKey - Ключ API для OpenRouter
+     * @param {string} apiUrl - URL API OpenRouter
+     */
     constructor(apiKey, apiUrl) {
         this.openrouterApiKey = apiKey;
         this.openrouterApiUrl = apiUrl;
     }
 
+    /**
+     * Генерирует кроссворд на основе входного текста или темы
+     * @param {string} text - Входной текст или тема
+     * @param {string} inputType - Тип входных данных ('text', 'topic' или 'file')
+     * @param {number} totalWords - Желаемое количество слов в кроссворде
+     * @returns {Object} Объект с данными кроссворда и словами
+     */
     async generateCrossword(text, inputType, totalWords) {
         try {
             // Очищаем текст, удаляя лишние пробелы и переносы строк
@@ -141,6 +159,12 @@ class CrosswordGenerator {
         }
     }
 
+    /**
+     * Создает матрицу кроссворда на основе макета
+     * @param {Object} layout - Макет кроссворда
+     * @param {Array} wordsData - Данные слов и подсказок
+     * @returns {Array<Array<string>>} Матрица кроссворда
+     */
     createGridFromLayout(layout, wordsData) {
         const grid = Array.from({ length: layout.rows }, () => Array(layout.cols).fill(''));
         layout.result.forEach((wordData, index) => {
