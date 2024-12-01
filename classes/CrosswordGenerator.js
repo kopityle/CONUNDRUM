@@ -174,12 +174,24 @@ class CrosswordGenerator {
             if (word && wordData.orientation !== 'none') {
                 let x = wordData.startx - 1;
                 let y = wordData.starty - 1;
+                
+                // Базовая проверка координат
+                if (x < 0 || y < 0 || x >= layout.cols || y >= layout.rows) {
+                    console.warn(`Пропуск слова ${word}: некорректные начальные координаты`);
+                    return;
+                }
+
                 for (let i = 0; i < word.length; i++) {
-                    if (wordData.orientation === 'across') {
-                        grid[y][x + i] = word[i];
-                    } else {
-                        grid[y + i][x] = word[i];
+                    let currentX = wordData.orientation === 'across' ? x + i : x;
+                    let currentY = wordData.orientation === 'across' ? y : y + i;
+                    
+                    // Проверка выхода за границы
+                    if (currentX >= layout.cols || currentY >= layout.rows) {
+                        console.warn(`Пропуск слова ${word}: выход за границы сетки`);
+                        return;
                     }
+
+                    grid[currentY][currentX] = word[i];
                 }
                 wordData.clue = clue;
             }
