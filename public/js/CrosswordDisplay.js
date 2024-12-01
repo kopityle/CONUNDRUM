@@ -1,7 +1,11 @@
+import { CluesDisplay } from './CluesDisplay.js';
+import { GameStateManager } from './GameStateManager.js';
+import { DisplayBase } from './DisplayBase.js';
+
 /**
  * Класс, отвечающий за отображение и взаимодействие с кроссвордом
  */
-export class CrosswordDisplay {
+export class CrosswordDisplay extends DisplayBase {
     /**
      * Отображает индикатор загрузки во время генерации кроссворда
      */
@@ -35,76 +39,128 @@ export class CrosswordDisplay {
         console.log("Сетка в displayCrossword:", grid);
         console.log("Слова в displayCrossword:", words);
 
-        const crosswordContainer = document.getElementById('crossword-container');
-        crosswordContainer.innerHTML = '';
+        // Очищаем игровое поле
+        this.clearGameField();
 
         // Проверяем входные данные
         if (!grid || !words) {
             console.error("Отсутствует сетка или слова!");
-            crosswordContainer.textContent = 'Не удалось получить данные кроссворда';
+            GameStateManager.displayError('Не удалось получить данные кроссворда');
             return;
         }
 
-        // Генерируем HTML таблицы с номерами слов и ячейками для ввода
-        const tableHTML = grid.map((row, rowIndex) => {
-            return `<tr>${row.map((cell, colIndex) => {
+        // Создаем таблицу
+        const table = this.createElement('table', { className: 'crossword-table' });
+        const crosswordContainer = document.getElementById('crossword-container');
+
+        // Генерируем ячейки кроссворда
+        grid.forEach((row, rowIndex) => {
+            const tr = this.createElement('tr', {}, '', table);
+            row.forEach((cell, colIndex) => {
                 if (cell !== '') {
                     // Проверяем, начинается ли слово в этой позиции
                     const wordData = words.find(word =>
                         word.startx - 1 === colIndex && word.starty - 1 === rowIndex && word.orientation !== 'none'
                     );
 
-                    const wordNumberHTML = wordData ? `<span class="word-number">${wordData.position}</span>` : '';
+                    // Создаем ячейку
+                    const td = this.createElement('td', {
+                        className: 'crossword-cell',
+                        'data-correct-letter': cell.toUpperCase()
+                    }, '', tr);
 
-                    return `<td class="crossword-cell" data-correct-letter="${cell.toUpperCase()}">${wordNumberHTML}<input type="text" maxlength="1" class="crossword-input"></td>`;
+                    // Добавляем номер слова, если есть
+                    if (wordData) {
+                        this.createElement('span', 
+                            { className: 'word-number' }, 
+                            wordData.position, 
+                            td
+                        );
+                    }
+
+                    // Добавляем поле ввода
+                    this.createElement('input', {
+                        type: 'text',
+                        maxLength: '1',
+                        className: 'crossword-input'
+                    }, '', td);
                 } else {
-                    return `<td class="black-cell"></td>`;
+                    this.createElement('td', { className: 'black-cell' }, '', tr);
                 }
-            }).join('')}</tr>`;
-        }).join('');
-
-        const table = document.createElement('table');
-        table.classList.add('crossword-table');
-        table.innerHTML = tableHTML;
+            });
+        });
 
         crosswordContainer.appendChild(table);
 
-        // Добавляем обработчики событий для ввода и нажатия клавиш
-        const tableElement = crosswordContainer.querySelector('table');
-        tableElement.addEventListener('input', (event) => {
-            const input = event.target;
-            const userInput = input.value.toUpperCase();
-            const correctLetter = input.parentNode.dataset.correctLetter;
+        // Добавляем обработчики событий
+        table.addEventListener('input', (event) => {
+            const validateInput = (input) => {
+                return input === event.target.parentNode.dataset.correctLetter;
+            };
 
-            // Обновляем цвет фона ячейки в зависимости от ввода пользователя
-            if (userInput === correctLetter) {
+            const onValidInput = (input) => {
                 input.parentNode.style.backgroundColor = '#c8e6c9';
-            } else {
-                input.parentNode.style.backgroundColor = '#ffcdd2';
-            }
-
-            // Переходим к следующей ячейке для ввода
-            const nextInput = this.findNextInput(input, grid);
-            if (nextInput) {
-                nextInput.focus();
-            }
-
-            // Проверяем, решен ли кроссворд
-            this.checkCrosswordSolved();
-        });
-
-        tableElement.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                const nextInput = this.findNextInput(event.target, grid);
+                const nextInput = this.findNextInput(input, grid);
                 if (nextInput) {
                     nextInput.focus();
                 }
-            }
+                GameStateManager.checkCrosswordSolved();
+            };
+
+            const onInvalidInput = (input) => {
+                input.parentNode.style.backgroundColor = '#ffcdd2';
+            };
+
+            this.handleInput(event, validateInput, onValidInput, onInvalidInput);
+        });
+
+        table.addEventListener('keydown', (event) => {
+            const onEnter = (input) => {
+                const nextInput = this.findNextInput(input, grid);
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            };
+
+            const onArrow = (input, key) => {
+                const currentCell = input.parentNode;
+                const row = currentCell.parentNode.rowIndex;
+                const col = currentCell.cellIndex;
+                let nextInput;
+
+                switch (key) {
+                    case 'ArrowRight':
+                        if (col + 1 < grid[row].length) {
+                            nextInput = currentCell.parentNode.cells[col + 1].querySelector('input');
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        if (col > 0) {
+                            nextInput = currentCell.parentNode.cells[col - 1].querySelector('input');
+                        }
+                        break;
+                    case 'ArrowDown':
+                        if (row + 1 < grid.length) {
+                            nextInput = table.rows[row + 1].cells[col].querySelector('input');
+                        }
+                        break;
+                    case 'ArrowUp':
+                        if (row > 0) {
+                            nextInput = table.rows[row - 1].cells[col].querySelector('input');
+                        }
+                        break;
+                }
+
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            };
+
+            this.handleKeydown(event, onEnter, onArrow);
         });
 
         // Отображаем подсказки
-        this.displayClues(words);
+        CluesDisplay.displayClues(words);
     }
 
     /**
@@ -134,102 +190,5 @@ export class CrosswordDisplay {
         }
 
         return null;
-    }
-
-    /**
-     * Проверяет, решен ли кроссворд
-     */
-    static checkCrosswordSolved() {
-        const cells = document.querySelectorAll('.crossword-cell input');
-
-        for (const input of cells) {
-            const userInput = input.value.toUpperCase();
-            const correctLetter = input.parentNode.dataset.correctLetter;
-
-            if (userInput !== correctLetter) {
-                return;
-            }
-        }
-
-        // Отображаем сообщение об успехе
-        this.displaySuccessMessage();
-    }
-
-    /**
-     * Отображает сообщение об успехе
-     */
-    static displaySuccessMessage() {
-        const crosswordContainer = document.getElementById('crossword-container');
-        const cluesContainer = document.getElementById('clues-container');
-
-        crosswordContainer.innerHTML = '';
-        cluesContainer.innerHTML = '';
-
-        const successMessage = document.createElement('div');
-        successMessage.classList.add('success-message');
-        successMessage.innerHTML = `
-            <h2>Поздравляем!</h2>
-            <p>Вы успешно решили кроссворд!</p>
-        `;
-
-        crosswordContainer.appendChild(successMessage);
-    }
-
-    /**
-     * Отображает подсказки
-     * @param {Array<Object>} words - Массив объектов слов, содержащих позицию и ориентацию
-     */
-    static displayClues(words) {
-        const cluesContainer = document.getElementById('clues-container');
-        cluesContainer.innerHTML = '';
-
-        const acrossClues = words.filter(wordData => wordData.orientation === 'across');
-        const downClues = words.filter(wordData => wordData.orientation === 'down');
-
-        /**
-         * Создает список подсказок
-         * @param {Array<Object>} clues - Массив объектов слов, содержащих позицию и ориентацию
-         * @param {string} title - Заголовок списка подсказок
-         * @returns {HTMLElement} Элемент списка подсказок
-         */
-        const createClueList = (clues, title) => {
-            const list = document.createElement('ul');
-            clues.forEach(wordData => {
-                const li = document.createElement('li');
-                li.textContent = `${wordData.position}. ${wordData.clue}`;
-                const showAnswerButton = document.createElement('button');
-                showAnswerButton.textContent = 'Показать ответ';
-                showAnswerButton.classList.add('show-answer-button');
-                showAnswerButton.addEventListener('click', () => {
-                    showAnswerButton.remove();
-                    li.textContent += ` (${wordData.answer})`;
-                });
-                li.appendChild(showAnswerButton);
-                list.appendChild(li);
-            });
-
-            const container = document.createElement('div');
-            container.classList.add('clues-section');
-            const titleElement = document.createElement('h3');
-            titleElement.textContent = title;
-            container.appendChild(titleElement);
-            container.appendChild(list);
-            return container;
-        };
-
-        const acrossContainer = createClueList(acrossClues, 'По горизонтали');
-        const downContainer = createClueList(downClues, 'По вертикали');
-
-        cluesContainer.appendChild(acrossContainer);
-        cluesContainer.appendChild(downContainer);
-    }
-
-    /**
-     * Отображает сообщение об ошибке
-     * @param {string} message - Сообщение об ошибке
-     */
-    static displayError(message) {
-        const crosswordContainer = document.getElementById('crossword-container');
-        crosswordContainer.innerHTML = `<div class="error-message">${message}</div>`;
     }
 }
