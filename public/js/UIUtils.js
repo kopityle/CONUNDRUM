@@ -1,3 +1,6 @@
+import { supabase } from '../config/SupabaseClient.js';
+import { AuthManager } from './AuthManager.js';
+
 /**
  * Класс для управления пользовательским интерфейсом
  */
