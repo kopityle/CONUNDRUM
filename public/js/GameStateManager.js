@@ -1,7 +1,10 @@
+import { elements } from './elements.js';
+import { DisplayBase } from './DisplayBase.js';
+
 /**
  * Класс, отвечающий за управление состоянием игры и отображение сообщений
  */
-export class GameStateManager {
+export class GameStateManager extends DisplayBase {
     /**
      * Проверяет, решен ли кроссворд
      */
@@ -23,19 +26,21 @@ export class GameStateManager {
     }
 
     /**
+     * Отображает сообщение об ошибке
+     * @param {string} message - Сообщение об ошибке
+     */
+    static displayError(message) {
+        if (elements.crosswordContainer) {
+            elements.crosswordContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+    }
+
+    /**
      * Отображает сообщение об успехе
      */
     static displaySuccessMessage() {
-        const crosswordContainer = document.getElementById('crossword-container');
-        const cluesContainer = document.getElementById('clues-container');
-
-        if (crosswordContainer) {
-            crosswordContainer.innerHTML = '';
-        }
-        
-        if (cluesContainer) {
-            cluesContainer.innerHTML = '';
-        }
+        // Используем метод clearGameField из базового класса
+        this.clearGameField();
 
         const successMessage = document.createElement('div');
         successMessage.classList.add('success-message');
@@ -44,19 +49,8 @@ export class GameStateManager {
             <p>Вы успешно решили кроссворд!</p>
         `;
 
-        if (crosswordContainer) {
-            crosswordContainer.appendChild(successMessage);
-        }
-    }
-
-    /**
-     * Отображает сообщение об ошибке
-     * @param {string} message - Сообщение об ошибке
-     */
-    static displayError(message) {
-        const gameContainer = document.getElementById('crossword-container');
-        if (gameContainer) {
-            gameContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        if (elements.crosswordContainer) {
+            elements.crosswordContainer.appendChild(successMessage);
         }
     }
 }

@@ -3,17 +3,18 @@ import { AuthManager } from './js/AuthManager.js';
 import { UIUtils } from './js/UIUtils.js';
 import { CrosswordDisplay } from './js/CrosswordDisplay.js';
 import { DisplayBase } from './js/DisplayBase.js';
+import { elements } from './js/elements.js';
 
 // Обработчик отправки формы для генерации кроссворда
-UIUtils.elements.crosswordForm?.addEventListener('submit', async (event) => {
+elements.crosswordForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
   
     // Получение значений из формы
-    const inputType = UIUtils.elements.inputTypeSelect.value;
-    const documentText = UIUtils.elements.documentTextarea.value;
-    const totalWords = parseInt(UIUtils.elements.totalWordsInput.value);
-    const topic = UIUtils.elements.topicInput.value;
-    const fileInput = UIUtils.elements.fileUploadInput;
+    const inputType = elements.inputTypeSelect.value;
+    const documentText = elements.documentTextarea.value;
+    const totalWords = parseInt(elements.totalWordsInput.value);
+    const topic = elements.topicInput.value;
+    const fileInput = elements.fileUploadInput;
 
     // Валидация введенных данных
     if (inputType === '') {

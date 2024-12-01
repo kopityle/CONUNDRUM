@@ -7,30 +7,6 @@ import { DisplayBase } from './DisplayBase.js';
  */
 export class CrosswordDisplay extends DisplayBase {
     /**
-     * Отображает индикатор загрузки во время генерации кроссворда
-     */
-    static displayLoadingIndicator() {
-        const cluesContainer = document.getElementById('clues-container');
-        cluesContainer.style.display = 'none';
-
-        const crosswordContainer = document.getElementById('crossword-container');
-        crosswordContainer.innerHTML = '<div class="loading-indicator">Загрузка...</div>';
-    }
-
-    /**
-     * Скрывает индикатор загрузки и показывает контейнер с подсказками
-     */
-    static hideLoadingIndicator() {
-        const loadingIndicator = document.querySelector('.loading-indicator');
-        if (loadingIndicator) {
-            loadingIndicator.remove();
-        }
-
-        const cluesContainer = document.getElementById('clues-container');
-        cluesContainer.style.display = 'flex';
-    }
-
-    /**
      * Отображает сетку кроссворда и слова
      * @param {Array<Array<string>>} grid - Двумерный массив, представляющий сетку кроссворда
      * @param {Array<Object>} words - Массив объектов слов, содержащих позицию и ориентацию

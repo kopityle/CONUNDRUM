@@ -1,3 +1,5 @@
+import { elements } from './elements.js';
+
 /**
  * Базовый класс для отображения игрового поля
  * Содержит общую логику для всех типов игр
@@ -7,15 +9,12 @@ export class DisplayBase {
      * Отображает индикатор загрузки
      */
     static displayLoadingIndicator() {
-        const gameContainer = document.getElementById('crossword-container');
-        const cluesContainer = document.getElementById('clues-container');
-        
-        if (cluesContainer) {
-            cluesContainer.style.display = 'none';
+        if (elements.cluesContainer) {
+            elements.cluesContainer.style.display = 'none';
         }
 
-        if (gameContainer) {
-            gameContainer.innerHTML = '<div class="loading-indicator">Загрузка...</div>';
+        if (elements.crosswordContainer) {
+            elements.crosswordContainer.innerHTML = '<div class="loading-indicator">Загрузка...</div>';
         }
     }
 
@@ -24,14 +23,13 @@ export class DisplayBase {
      */
     static hideLoadingIndicator() {
         const loadingIndicator = document.querySelector('.loading-indicator');
-        const cluesContainer = document.getElementById('clues-container');
         
         if (loadingIndicator) {
             loadingIndicator.remove();
         }
 
-        if (cluesContainer) {
-            cluesContainer.style.display = 'flex';
+        if (elements.cluesContainer) {
+            elements.cluesContainer.style.display = 'flex';
         }
     }
 
@@ -77,15 +75,12 @@ export class DisplayBase {
      * Очищает игровое поле
      */
     static clearGameField() {
-        const gameContainer = document.getElementById('crossword-container');
-        const cluesContainer = document.getElementById('clues-container');
-
-        if (gameContainer) {
-            gameContainer.innerHTML = '';
+        if (elements.crosswordContainer) {
+            elements.crosswordContainer.innerHTML = '';
         }
 
-        if (cluesContainer) {
-            cluesContainer.innerHTML = '';
+        if (elements.cluesContainer) {
+            elements.cluesContainer.innerHTML = '';
         }
     }
 

@@ -1,43 +1,11 @@
 import { supabase } from '../config/SupabaseClient.js';
 import { AuthManager } from './AuthManager.js';
+import { elements } from './elements.js';
 
 /**
  * Класс для управления пользовательским интерфейсом
  */
 export class UIUtils {
-    static elements = {
-        // Модальные окна
-        registerPopup: document.getElementById('register-popup'),
-        loginPopup: document.getElementById('login-popup'),
-        profilePopup: document.getElementById('profile-popup'),
-        
-        // Область профиля и кнопка выхода
-        profileArea: document.getElementById('profile-area'),
-        logoutButton: document.getElementById('logout-button'),
-        
-        // Кнопки открытия модальных окон
-        openRegisterButton: document.getElementById('open-register-popup'),
-        openLoginButton: document.getElementById('open-login-popup'),
-        openProfileButton: document.getElementById('open-profile-popup'),
-        
-        // Формы
-        registerForm: document.getElementById('register-form'),
-        loginForm: document.getElementById('login-form'),
-        profileForm: document.getElementById('profile-form'),
-        
-        // Элементы профиля
-        profileUsername: document.getElementById('profile-username'),
-        profileEmail: document.getElementById('profile-email'),
-
-        // Элементы формы кроссворда
-        inputTypeSelect: document.getElementById('input-type'),
-        documentTextarea: document.getElementById('document'),
-        fileUploadInput: document.getElementById('file-upload'),
-        topicInput: document.getElementById('topic'),
-        totalWordsInput: document.getElementById('total-words'),
-        crosswordForm: document.getElementById('crossword-form')
-    };
-
     /**
      * Инициализация всех обработчиков событий
      */
@@ -52,9 +20,9 @@ export class UIUtils {
      */
     static initializePopupHandlers() {
         // Обработчики открытия попапов
-        this.elements.openRegisterButton?.addEventListener('click', () => this.showPopup(this.elements.registerPopup));
-        this.elements.openLoginButton?.addEventListener('click', () => this.showPopup(this.elements.loginPopup));
-        this.elements.openProfileButton?.addEventListener('click', () => this.showPopup(this.elements.profilePopup));
+        elements.openRegisterButton?.addEventListener('click', () => this.showPopup(elements.registerPopup));
+        elements.openLoginButton?.addEventListener('click', () => this.showPopup(elements.loginPopup));
+        elements.openProfileButton?.addEventListener('click', () => this.showPopup(elements.profilePopup));
 
         // Обработчик клика вне попапа
         window.addEventListener('click', (e) => this.handleOutsideClick(e));
@@ -73,17 +41,17 @@ export class UIUtils {
      */
     static initializeFormHandlers() {
         // Добавляем обработчики событий для форм, если они существуют
-        if (this.elements.registerForm) {
-            this.elements.registerForm.addEventListener('submit', (e) => AuthManager.handleRegistration(e));
+        if (elements.registerForm) {
+            elements.registerForm.addEventListener('submit', (e) => AuthManager.handleRegistration(e));
         }
-        if (this.elements.loginForm) {
-            this.elements.loginForm.addEventListener('submit', (e) => AuthManager.handleLogin(e));
+        if (elements.loginForm) {
+            elements.loginForm.addEventListener('submit', (e) => AuthManager.handleLogin(e));
         }
-        if (this.elements.profileForm) {
-            this.elements.profileForm.addEventListener('submit', (e) => AuthManager.updateProfile(e));
+        if (elements.profileForm) {
+            elements.profileForm.addEventListener('submit', (e) => AuthManager.updateProfile(e));
         }
-        if (this.elements.logoutButton) {
-            this.elements.logoutButton.addEventListener('click', () => AuthManager.handleLogout());
+        if (elements.logoutButton) {
+            elements.logoutButton.addEventListener('click', () => AuthManager.handleLogout());
         }
     }
 
@@ -91,8 +59,8 @@ export class UIUtils {
      * Инициализация обработчиков для переключения типа ввода
      */
     static initializeInputTypeHandlers() {
-        if (this.elements.inputTypeSelect) {
-            this.elements.inputTypeSelect.addEventListener('change', () => this.toggleInputs());
+        if (elements.inputTypeSelect) {
+            elements.inputTypeSelect.addEventListener('change', () => this.toggleInputs());
             this.toggleInputs(); // Вызываем сразу для установки начального состояния
         }
     }
@@ -101,11 +69,11 @@ export class UIUtils {
      * Переключение видимости полей ввода
      */
     static toggleInputs() {
-        const selectedType = this.elements.inputTypeSelect.value;
+        const selectedType = elements.inputTypeSelect.value;
         
-        this.elements.documentTextarea.style.display = selectedType === 'text' ? 'block' : 'none';
-        this.elements.fileUploadInput.style.display = selectedType === 'file' ? 'block' : 'none';
-        this.elements.topicInput.style.display = selectedType === 'topic' ? 'block' : 'none';
+        elements.documentTextarea.style.display = selectedType === 'text' ? 'block' : 'none';
+        elements.fileUploadInput.style.display = selectedType === 'file' ? 'block' : 'none';
+        elements.topicInput.style.display = selectedType === 'topic' ? 'block' : 'none';
     }
 
     /**
@@ -146,6 +114,14 @@ export class UIUtils {
      * @param {string} message - Текст сообщения
      */
     static showError(message) {
+        alert(message);
+    }
+
+    /**
+     * Показать сообщение об успехе
+     * @param {string} message - Текст сообщения
+     */
+    static showSuccess(message) {
         alert(message);
     }
 }

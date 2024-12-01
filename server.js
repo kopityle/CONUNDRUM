@@ -7,7 +7,7 @@ const CrosswordGenerator = require('./classes/CrosswordGenerator');
 const FileManager = require('./classes/FileManager');
 
 const app = express();
-const port = 8098;
+const port = 8095;
 const publicPath = path.join(__dirname, 'public');
 
 // Environment variables
