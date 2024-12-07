@@ -2,14 +2,16 @@ import { supabase } from './config/SupabaseClient.js';
 import { AuthManager } from './js/AuthManager.js';
 import { UIUtils } from './js/UIUtils.js';
 import { CrosswordDisplay } from './js/CrosswordDisplay.js';
+import { WordSoupDisplay } from './js/WordSoupDisplay.js';
 import { DisplayBase } from './js/DisplayBase.js';
 import { elements } from './js/elements.js';
 
-// Обработчик отправки формы для генерации кроссворда
+// Обработчик отправки формы для генерации игры
 elements.crosswordForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
   
     // Получение значений из формы
+    const gameType = elements.gameTypeSelect.value;
     const inputType = elements.inputTypeSelect.value;
     const documentText = elements.documentTextarea.value;
     const totalWords = parseInt(elements.totalWordsInput.value);
@@ -41,9 +43,10 @@ elements.crosswordForm?.addEventListener('submit', async (event) => {
 
     try {
         // Отправка данных на сервер
-        const response = await fetch('/generate-crossword', {
+        const formData = new FormData(event.target);
+        const response = await fetch('/generate-game', {
             method: 'POST',
-            body: new FormData(event.target),
+            body: formData,
         });
 
         if (!response.ok) {
@@ -52,11 +55,20 @@ elements.crosswordForm?.addEventListener('submit', async (event) => {
 
         const data = await response.json();
 
-        // Отображение кроссворда при успешном получении данных
-        if (data.crossword && data.words) {
-            CrosswordDisplay.displayCrossword(data.crossword, data.layout.result);
+        // Отображение игры в зависимости от выбранного типа
+        if (gameType === 'wordsoup') {
+            if (data.grid && data.words) {
+                const display = new WordSoupDisplay(data);
+                display.display();
+            } else {
+                UIUtils.showError('Не удалось получить данные для игры');
+            }
         } else {
-            UIUtils.showError('Не удалось получить данные кроссворда');
+            if (data.crossword && data.words) {
+                CrosswordDisplay.displayCrossword(data.crossword, data.layout.result);
+            } else {
+                UIUtils.showError('Не удалось получить данные кроссворда');
+            }
         }
     } catch (error) {
         console.error(error);
@@ -64,7 +76,7 @@ elements.crosswordForm?.addEventListener('submit', async (event) => {
         if (error.response?.data?.error) {
             UIUtils.showError(error.response.data.error);
         } else {
-            UIUtils.showError("Произошла ошибка при генерации кроссворда. Пожалуйста, попробуйте снова.");
+            UIUtils.showError("Произошла ошибка при генерации игры. Пожалуйста, попробуйте снова.");
         }
     } finally {
         DisplayBase.hideLoadingIndicator();

@@ -136,14 +136,34 @@ class CrosswordGenerator {
 
             // Генерация кроссворда
             const layout = clg.generateLayout(wordsData.map(item => ({
-                answer: item.word,
+                answer: item.word.replace(/\s+/g, ''),  // Удаляем пробелы для сетки
                 clue: item.clue
             })));
+
+            // Обновляем ответы в layout без пробелов, но сохраняем оригинальные слова
+            layout.result.forEach(wordData => {
+                const originalWord = wordsData.find(item => 
+                    item.word.replace(/\s+/g, '').toUpperCase() === wordData.answer.toUpperCase()
+                )?.word;
+                
+                wordData.originalWord = originalWord; // Сохраняем оригинальное слово с пробелами
+                wordData.word = originalWord; // Добавляем также в поле word для совместимости
+                wordData.answer = wordData.answer.replace(/\s+/g, ''); // Версия без пробелов для сетки
+            });
+
             const crosswordGrid = this.createGridFromLayout(layout, wordsData);
+
+            // Подготавливаем слова для отображения, сохраняя оригинальные версии
+            const displayWords = layout.result.map(wordData => ({
+                ...wordData,
+                word: wordData.originalWord, // Используем оригинальное слово для подсказок
+                answer: wordData.originalWord, // Для совместимости с разными форматами
+                cleanAnswer: wordData.answer // Сохраняем версию без пробелов для проверки
+            }));
 
             return {
                 crossword: crosswordGrid,
-                words: wordsData,
+                words: displayWords,
                 rawResponse: response.data,
                 parsedWords: wordsData,
                 layout: layout
@@ -168,32 +188,31 @@ class CrosswordGenerator {
     createGridFromLayout(layout, wordsData) {
         const grid = Array.from({ length: layout.rows }, () => Array(layout.cols).fill(''));
         layout.result.forEach((wordData, index) => {
-            const word = wordsData.find(item => item.word.toUpperCase() === wordData.answer.toUpperCase())?.word.toUpperCase();
-            const clue = wordsData.find(item => item.word.toUpperCase() === wordData.answer.toUpperCase())?.clue;
-
-            if (word && wordData.orientation !== 'none') {
+            // Используем версию слова без пробелов для сетки
+            const wordForGrid = wordData.answer.toUpperCase();
+            
+            if (wordForGrid && wordData.orientation !== 'none') {
                 let x = wordData.startx - 1;
                 let y = wordData.starty - 1;
                 
                 // Базовая проверка координат
                 if (x < 0 || y < 0 || x >= layout.cols || y >= layout.rows) {
-                    console.warn(`Пропуск слова ${word}: некорректные начальные координаты`);
+                    console.warn(`Пропуск слова ${wordForGrid}: некорректные начальные координаты`);
                     return;
                 }
 
-                for (let i = 0; i < word.length; i++) {
+                for (let i = 0; i < wordForGrid.length; i++) {
                     let currentX = wordData.orientation === 'across' ? x + i : x;
                     let currentY = wordData.orientation === 'across' ? y : y + i;
                     
                     // Проверка выхода за границы
                     if (currentX >= layout.cols || currentY >= layout.rows) {
-                        console.warn(`Пропуск слова ${word}: выход за границы сетки`);
+                        console.warn(`Пропуск слова ${wordForGrid}: выход за границы сетки`);
                         return;
                     }
 
-                    grid[currentY][currentX] = word[i];
+                    grid[currentY][currentX] = wordForGrid[i];
                 }
-                wordData.clue = clue;
             }
         });
         return grid;

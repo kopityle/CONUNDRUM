@@ -43,12 +43,13 @@ export const elements = {
     loginPassword: document.getElementById('login-password'),
 
     // Элементы формы кроссворда
+    crosswordForm: document.getElementById('crossword-form'),
+    gameTypeSelect: document.getElementById('game-type'),
     inputTypeSelect: document.getElementById('input-type'),
     documentTextarea: document.getElementById('document'),
     fileUploadInput: document.getElementById('file-upload'),
     topicInput: document.getElementById('topic'),
     totalWordsInput: document.getElementById('total-words'),
-    crosswordForm: document.getElementById('crossword-form'),
 
     // Элементы игрового поля
     crosswordContainer: document.getElementById('crossword-container'),

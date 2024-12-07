@@ -4,6 +4,7 @@ const multer = require('multer');
 require('dotenv').config();
 
 const CrosswordGenerator = require('./classes/CrosswordGenerator');
+const WordSoupGenerator = require('./classes/WordSoupGenerator');
 const FileManager = require('./classes/FileManager');
 
 const app = express();
@@ -18,6 +19,7 @@ const supabaseAnonKey = process.env.SUPABASE_KEY;
 
 // Initialize our classes
 const crosswordGenerator = new CrosswordGenerator(openrouterApiKey, openrouterApiUrl);
+const wordSoupGenerator = new WordSoupGenerator(openrouterApiKey, openrouterApiUrl);
 const fileManager = new FileManager();
 
 // Multer configuration
@@ -29,9 +31,10 @@ app.use(express.static(publicPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post('/generate-crossword', upload.single('file-upload'), async (req, res) => {
+app.post('/generate-game', upload.single('file-upload'), async (req, res) => {
     try {
         const inputType = req.body.inputType;
+        const gameType = req.body.gameType;
         const totalWords = parseInt(req.body.totalWords);
         let text = '';
         
@@ -58,22 +61,34 @@ app.post('/generate-crossword', upload.single('file-upload'), async (req, res) =
             throw new Error('Invalid number of words');
         }
         
-        // Generate crossword
-        const crosswordData = await crosswordGenerator.generateCrossword(text, inputType, totalWords);
-        
-        // Validate crossword data
-        if (!crosswordData || !crosswordData.crossword || !crosswordData.words || !crosswordData.layout) {
-            throw new Error('Failed to generate valid crossword data');
+        // Generate game based on type
+        let gameData;
+        if (gameType === 'wordsoup') {
+            gameData = await wordSoupGenerator.generateWordSoup(text, inputType, totalWords);
+            if (!gameData || !gameData.grid || !gameData.words) {
+                throw new Error('Failed to generate valid word soup data');
+            }
+        } else {
+            const crosswordData = await crosswordGenerator.generateCrossword(text, inputType, totalWords);
+            if (!crosswordData || !crosswordData.crossword || !crosswordData.words || !crosswordData.layout) {
+                throw new Error('Failed to generate valid crossword data');
+            }
+            gameData = {
+                grid: crosswordData.crossword,
+                words: crosswordData.words,
+                layout: crosswordData.layout,
+                crossword: crosswordData.crossword // сохраняем для обратной совместимости
+            };
         }
 
-        res.json(crosswordData);
+        res.json(gameData);
 
     } catch (error) {
-        console.error('Error generating crossword:', error);
+        console.error('Error generating game:', error);
         
         // Send appropriate error response
         let statusCode = 500;
-        let errorMessage = 'An error occurred while generating the crossword';
+        let errorMessage = 'An error occurred while generating the game';
 
         if (error.message.includes('Invalid input') || error.message.includes('Empty input')) {
             statusCode = 400;

@@ -6,6 +6,7 @@
   <title>CONUNDRUM - Генератор кроссвордов</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/word-soup.css">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!— Yandex.Metrika counter —>
@@ -125,7 +126,11 @@ accurateTrackBounce:true
   <main> 
     <div class="container">
       <form id="crossword-form" enctype="multipart/form-data">
-
+        <label for="game-type">Тип игры:</label>
+        <select id="game-type" name="gameType">
+          <option value="crossword">Кроссворд</option>
+          <option value="wordsoup">Суп из слов</option>
+        </select>
 
         <label for="input-type">Тип ввода:</label>
         <select id="input-type" name="inputType"> 
@@ -141,7 +146,7 @@ accurateTrackBounce:true
 
         <label for="total-words">Общее количество слов:</label>
         <input type="number" id="total-words" name="totalWords" value="10" min="5">
-        <button type="submit">Сгенерировать кроссворд</button>
+        <button type="submit">Сгенерировать игру</button>
         <div id="crossword-container"></div>
         <div id="clues-container"></div> 
       </form>
