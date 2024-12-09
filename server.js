@@ -8,7 +8,7 @@ const WordSoupGenerator = require('./classes/WordSoupGenerator');
 const FileManager = require('./classes/FileManager');
 
 const app = express();
-const port = 8095;
+const port = 8098;
 const publicPath = path.join(__dirname, 'public');
 
 // Environment variables

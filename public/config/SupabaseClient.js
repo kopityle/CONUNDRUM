@@ -46,12 +46,12 @@ initSupabase(); // Запускаем инициализацию сразу
  * @param {string} email - Email пользователя
  * @param {string} password - Пароль пользователя
  * @param {string} username - Имя пользователя
- * @param {number|null} age - Возраст пользователя
+ * @param {string|null} birthdate - Дата рождения пользователя
  * @param {string|null} gender - Пол пользователя
  * @param {string|null} occupation - Род занятий пользователя
  * @returns {Promise<Object>} Данные созданного пользователя
  */
-async function signUp(email, password, username, age, gender, occupation) {
+async function signUp(email, password, username, birthdate, gender, occupation) {
     try {
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -59,7 +59,7 @@ async function signUp(email, password, username, age, gender, occupation) {
             options: {
                 data: { 
                     username,
-                    age: age ? parseInt(age) : null,
+                    birthdate: birthdate || null,
                     gender: gender || null,
                     occupation: occupation || null
                 }

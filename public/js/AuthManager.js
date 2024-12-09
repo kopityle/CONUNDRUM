@@ -19,12 +19,12 @@ class AuthManager {
             const email = elements.registerEmail.value;
             const password = elements.registerPassword.value;
             const username = elements.registerUsername.value;
-            const age = elements.registerAge.value || null;
+            const birthdate = elements.registerBirthdate.value || null;
             const gender = elements.registerGender.value || null;
             const occupation = elements.registerOccupation.value || null;
 
             // Пытаемся зарегистрировать пользователя
-            const result = await signUp(email, password, username, age, gender, occupation);
+            const result = await signUp(email, password, username, birthdate, gender, occupation);
 
             if (result) {
                 // Показываем сообщение об успехе и закрываем окно регистрации
@@ -96,9 +96,16 @@ class AuthManager {
                 // Обновляем элементы интерфейса данными пользователя
                 elements.profileUsername.textContent = currentUser.user_metadata.username || currentUser.email;
                 elements.profileEmail.textContent = currentUser.email;
-                elements.profileAge.value = currentUser.user_metadata.age || '';
+                elements.profileBirthdate.value = currentUser.user_metadata.birthdate || '';
                 elements.profileGender.value = currentUser.user_metadata.gender || '';
                 elements.profileOccupation.value = currentUser.user_metadata.occupation || '';
+                
+                // Calculate and display age
+                const birthdate = currentUser.user_metadata.birthdate;
+                if (birthdate) {
+                    const age = this.calculateAge(birthdate);
+                    elements.profileAge.textContent = `(Возраст: ${age})`;
+                }
 
                 this.showProfileButton();
             }
@@ -106,6 +113,30 @@ class AuthManager {
             console.error('Ошибка обновления интерфейса профиля:', error);
             UIUtils.showError('Ошибка при обновлении интерфейса профиля: ' + error.message);
         }
+    }
+    
+    /**
+     * Вычисляет возраст по дате рождения
+     * @param {string} birthdate - Дата рождения в формате 'YYYY-MM-DD'
+     */
+    static calculateAge(birthdate) {
+        const birthdateParts = birthdate.split('-');
+        const birthYear = parseInt(birthdateParts[0]);
+        const birthMonth = parseInt(birthdateParts[1]);
+        const birthDay = parseInt(birthdateParts[2]);
+        
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
+        const currentDay = today.getDate();
+        
+        let age = currentYear - birthYear;
+        
+        if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+            age--;
+        }
+        
+        return age;
     }
   
     /**
@@ -116,14 +147,14 @@ class AuthManager {
         event.preventDefault();
         try {
             // Получаем обновленную информацию из формы
-            const age = elements.profileAge.value;
+            const birthdate = elements.profileBirthdate.value;
             const gender = elements.profileGender.value;
             const occupation = elements.profileOccupation.value;
 
             // Пытаемся обновить профиль пользователя
             const { data, error } = await supabase.auth.updateUser({
                 data: { 
-                    age: age ? parseInt(age) : null,
+                    birthdate: birthdate || null,
                     gender: gender || null,
                     occupation: occupation || null
                 }
