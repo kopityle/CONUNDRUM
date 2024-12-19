@@ -26,7 +26,6 @@ export const elements = {
     // Элементы профиля
     profileUsername: document.getElementById('profile-username'),
     profileEmail: document.getElementById('profile-email'),
-    profileAge: document.getElementById('profile-age'),
     profileGender: document.getElementById('profile-gender'),
     profileOccupation: document.getElementById('profile-occupation'),
 
@@ -34,7 +33,6 @@ export const elements = {
     registerEmail: document.getElementById('register-email'),
     registerPassword: document.getElementById('register-password'),
     registerUsername: document.getElementById('register-username'),
-    registerAge: document.getElementById('register-age'),
     registerGender: document.getElementById('register-gender'),
     registerOccupation: document.getElementById('register-occupation'),
 

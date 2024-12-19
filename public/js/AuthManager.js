@@ -19,12 +19,11 @@ class AuthManager {
             const email = elements.registerEmail.value;
             const password = elements.registerPassword.value;
             const username = elements.registerUsername.value;
-            const age = elements.registerAge.value || null;
             const gender = elements.registerGender.value || null;
             const occupation = elements.registerOccupation.value || null;
 
             // Пытаемся зарегистрировать пользователя
-            const result = await signUp(email, password, username, age, gender, occupation);
+            const result = await signUp(email, password, username, gender, occupation);
 
             if (result) {
                 // Показываем сообщение об успехе и закрываем окно регистрации
@@ -96,7 +95,6 @@ class AuthManager {
                 // Обновляем элементы интерфейса данными пользователя
                 elements.profileUsername.textContent = currentUser.user_metadata.username || currentUser.email;
                 elements.profileEmail.textContent = currentUser.email;
-                elements.profileAge.value = currentUser.user_metadata.age || '';
                 elements.profileGender.value = currentUser.user_metadata.gender || '';
                 elements.profileOccupation.value = currentUser.user_metadata.occupation || '';
 
@@ -116,14 +114,12 @@ class AuthManager {
         event.preventDefault();
         try {
             // Получаем обновленную информацию из формы
-            const age = elements.profileAge.value;
             const gender = elements.profileGender.value;
             const occupation = elements.profileOccupation.value;
 
             // Пытаемся обновить профиль пользователя
             const { data, error } = await supabase.auth.updateUser({
                 data: { 
-                    age: age ? parseInt(age) : null,
                     gender: gender || null,
                     occupation: occupation || null
                 }
