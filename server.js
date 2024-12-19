@@ -36,6 +36,7 @@ app.post('/generate-game', upload.single('file-upload'), async (req, res) => {
         const inputType = req.body.inputType;
         const gameType = req.body.gameType;
         const totalWords = parseInt(req.body.totalWords);
+        const difficulty = req.body.difficulty || 'normal';
         let text = '';
         
         // Handle different input types
@@ -44,7 +45,6 @@ app.post('/generate-game', upload.single('file-upload'), async (req, res) => {
         } else if (inputType === 'topic') {
             text = req.body.topic;
         } else if (inputType === 'file' && req.file) {
-            // Validate and parse file
             fileManager.validateFileType(req.file.originalname);
             fileManager.validateFileSize(req.file);
             text = await fileManager.parseFile(req.file);
@@ -61,15 +61,14 @@ app.post('/generate-game', upload.single('file-upload'), async (req, res) => {
             throw new Error('Invalid number of words');
         }
         
-        // Generate game based on type
         let gameData;
         if (gameType === 'wordsoup') {
-            gameData = await wordSoupGenerator.generateWordSoup(text, inputType, totalWords);
+            gameData = await wordSoupGenerator.generateWordSoup(text, inputType, totalWords, difficulty);
             if (!gameData || !gameData.grid || !gameData.words) {
                 throw new Error('Failed to generate valid word soup data');
             }
         } else {
-            const crosswordData = await crosswordGenerator.generateCrossword(text, inputType, totalWords);
+            const crosswordData = await crosswordGenerator.generateCrossword(text, inputType, totalWords, difficulty);
             if (!crosswordData || !crosswordData.crossword || !crosswordData.words || !crosswordData.layout) {
                 throw new Error('Failed to generate valid crossword data');
             }
