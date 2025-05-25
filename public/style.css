@@ -1,52 +1,524 @@
-/* css */
+/* CSS Reset (Basic) */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-    font-family: sans-serif;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+  font-family: 'Roboto', sans-serif;
+  color: #333333; /* Dark Grey */
+  background-color: #f8f9fa; /* Light Grey */
+  line-height: 1.6;
+  font-size: 16px;
+  display: flex; /* Allow header/main to grow */
+  flex-direction: column; /* Stack header and main */
+  min-height: 100vh;
 }
 
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+p { margin-bottom: 1rem; }
+
+a {
+  color: #52ab98; /* Primary Color */
+  text-decoration: none;
+}
+
+a:hover {
+  color: #3d8b7a; /* Darker Primary */
+  text-decoration: underline;
+}
+
+
+/* OLD STYLES TO BE REPLACED OR REMOVED BELOW */
+/* The old body, .container, nav, textarea, input[type="number"], button styles will be addressed in subsequent steps */
+
+/* Header & Navigation */
 header {
-    width: 90%; 
-    top: 0;
-    left: 0;
-    padding: 20px; /* Add padding directly to the header */
-    margin: 0 auto; /* Center the content within the header */
-    display: flex; /* Use flexbox for better layout control */
-    justify-content: space-between; /* Align items to the edges */
-    align-items: center; /* Vertically center items */
+  background-color: #52ab98; /* Primary Color */
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* top, left, margin: 0 auto are not needed with width: 100% */
 }
 
-.container {
+header h1.rainbow-text { /* Re-style for logo */
+  font-family: 'Montserrat', sans-serif; /* Already set by global h1, but can be specific */
+  color: white; /* White against primary background */
+  font-size: 1.8rem; /* Adjust as needed */
+  text-shadow: none; /* Remove old rainbow effect */
+  margin-bottom: 0; /* Remove default h1 margin if it's affecting alignment */
+}
 
+#main-nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0; /* Reset default ul margin */
+  padding: 0; /* Reset default ul padding */
+}
+
+#main-nav li {
+  margin-left: 20px;
+}
+
+#main-nav li a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#main-nav li a:hover,
+#main-nav li a.active { /* For active page indication */
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.profile-menu-container {
+  position: relative;
+}
+
+.profile-menu-container .dropdown-content {
+  display: none; /* Keep hidden by default */
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px); /* Position below the profile link */
+  background-color: white;
+  color: #333333;
+  border: 1px solid #e0e0e0; /* Light Grey border */
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.profile-menu-container .dropdown-content a {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: #333333; /* Dark Grey text */
+  text-decoration: none;
+}
+
+.profile-menu-container .dropdown-content a:hover {
+  background-color: #f8f9fa; /* Light Grey background on hover */
+  color: #52ab98; /* Primary Color text on hover */
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif; /* Using Montserrat for a slightly more prominent button text */
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  text-decoration: none; /* Ensure links styled as buttons don't have underlines */
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #52ab98; /* Primary */
+  border-color: #52ab98;
+}
+.btn-primary:hover {
+  background-color: #479684;
+  border-color: #428b79;
+}
+.btn-primary:active, .btn-primary:focus {
+  background-color: #3d8b7a;
+  border-color: #387b6d;
+  box-shadow: 0 0 0 0.2rem rgba(82, 171, 152, 0.5);
+}
+
+.btn-secondary {
+  color: #52ab98; /* Primary text */
+  background-color: #e9ecef; /* Light Grey background */
+  border: 1px solid #52ab98; /* Primary border */
+}
+.btn-secondary:hover {
+  background-color: #d8dcdf;
+  color: #479684; /* Darker Primary text */
+  border-color: #479684;
+}
+.btn-secondary:active, .btn-secondary:focus {
+  background-color: #ced4da;
+  border-color: #3d8b7a;
+  box-shadow: 0 0 0 0.2rem rgba(82, 171, 152, 0.3);
+}
+
+.btn-accent {
+  color: #333333; /* Dark Grey text for good contrast */
+  background-color: #FFD700; /* Sunny Yellow */
+  border-color: #FFD700;
+}
+.btn-accent:hover {
+  background-color: #f0c800;
+  border-color: #e0b900;
+}
+.btn-accent:active, .btn-accent:focus {
+  background-color: #e0b900;
+  border-color: #d1aa00;
+  box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.5);
+}
+
+.btn-danger { /* For logout, delete etc. */
+  color: #fff;
+  background-color: #dc3545; /* Error Red */
+  border-color: #dc3545;
+}
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+/* End of New Button Styles */
+
+/* Forms */
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-family: 'Roboto', sans-serif;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #495057; /* Neutral text color for inputs */
+  background-color: #fff; /* White background for inputs */
+  background-clip: padding-box;
+  border: 1px solid #ced4da; /* Medium Light Grey border */
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  margin-bottom: 1rem; /* Default spacing for form elements */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #52ab98; /* Primary Color for focus */
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(82, 171, 152, 0.25); /* Subtle glow with Primary color */
+}
+
+input[type="file"] { /* Basic styling for file inputs */
+  margin-bottom: 1rem;
+  font-family: 'Roboto', sans-serif;
+  display: block; /* Ensure it takes full width if needed or for consistency */
+  width: 100%; /* Make it consistent with other inputs */
+}
+
+select {
+  height: calc(1.5em + 1rem + 2px); /* Ensure select height matches other inputs */
+}
+
+textarea {
+  resize: vertical;
+}
+/* End of New Form Element Styles */
+
+/* Main Content & View Containers */
+main {
+  flex-grow: 1; /* Allow main to take up available space */
+  width: 100%;
+  padding: 1.5rem; /* Add some padding around the views */
+}
+
+#dashboard-view,
+#game-creation-view,
+#game-solving-view {
+  padding: 1.5rem;
+  background-color: #ffffff; /* White background for content areas */
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); /* Subtle shadow */
+  margin-bottom: 1.5rem; /* Space between views if multiple were shown (though usually not) */
+}
+
+/* Styling for step containers within game creation view */
+#game-creation-view #creation-step-1-options,
+#game-creation-view #creation-step-2-content-input,
+#game-creation-view #creation-step-3-generate {
+  margin-bottom: 1.5rem; /* Space out the steps */
+  padding-bottom: 1.5rem; /* Add padding below the content of each step */
+  border-bottom: 1px solid #e9ecef; /* Light Grey separator line */
+}
+#game-creation-view #creation-step-3-generate {
+  border-bottom: none; /* No border for the last step */
+}
+/* End of View Container Styles */
+
+/* Pop-ups */
+.popup {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1050; /* High z-index to be on top of other content */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0, 0, 0, 0.5); /* Darker, semi-transparent overlay */
+}
+
+.popup-content {
+  background-color: #fff; /* White background for popup content */
+  margin: 10% auto; /* More top margin for better centering, less aggressive than 15% */
+  padding: 2rem; /* More padding for a spacious feel */
+  border: none; /* Remove old border */
+  border-radius: 0.3rem; /* Slightly larger radius for modern look */
+  width: 90%; /* Responsive width */
+  max-width: 500px; /* Max width for popups, good for forms */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* More pronounced shadow */
+  position: relative; /* For positioning the close button */
+}
+
+.popup-content h2 { /* Ensure popup titles use new typography */
+  font-family: 'Montserrat', sans-serif;
+  margin-top: 0; /* Remove potential default top margin from h2 */
+  margin-bottom: 1.5rem; /* Space below title */
+  text-align: center;
+}
+
+.close {
+  color: #6c757d; /* Neutral grey for close button */
+  position: absolute;
+  top: 1rem; /* Consistent spacing from top */
+  right: 1rem; /* Consistent spacing from right */
+  font-size: 1.75rem; /* Larger, more clickable size */
+  font-weight: bold;
+  line-height: 1; /* Ensure it doesn't affect line height */
+  text-decoration: none;
+}
+
+.close:hover,
+.close:focus {
+  color: #333333; /* Dark Grey on hover/focus */
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Fallback for popup buttons - prefer using .btn classes in HTML */
+.popup-content button {
+  /* This selector is broad; ideally, buttons in HTML get .btn .btn-primary etc. */
+  /* If they don't, this provides a basic fallback that's better than old styles */
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  width: 100%; /* Make buttons full width by default in popups */
+  margin-top: 0.5rem; /* Add some space above buttons */
+}
+
+/* Specifically style submit buttons in popups to be primary if no other class is set */
+.popup-content form button[type="submit"] {
+    color: #fff;
+    background-color: #52ab98; /* Primary */
+    border: 1px solid #52ab98; /* Matching border */
+}
+.popup-content form button[type="submit"]:hover {
+    background-color: #479684;
+    border-color: #428b79;
+}
+/* End of Pop-up Styles */
+
+/* Game Display Elements */
+#crossword-container {
+  display: flex;
+  justify-content: center; /* Center the table if it's smaller than container */
+  margin-top: 20px;
+  overflow-x: auto; /* Allow horizontal scroll for large crosswords */
+}
+
+.crossword-table {
+  border-collapse: collapse;
+  margin: 20px 0; /* Margin for spacing, auto for horizontal centering if parent is wider */
+  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for the table */
+}
+
+.crossword-table td { /* This is effectively .crossword-cell from old CSS */
+  width: 35px; /* Slightly larger cells for better touch interaction / readability */
+  height: 35px;
+  position: relative;
+  text-align: center;
+  font-family: 'Roboto', sans-serif; /* Ensure Roboto */
+  font-size: 1rem; /* Standardized font size */
+  border: 1px solid #ced4da; /* Medium Light Grey border */
+}
+
+.crossword-input {
+  width: calc(100% - 2px); /* Fill cell, account for internal border if any, or just make it full */
+  height: calc(100% - 2px);
+  border: none; /* No border for the input itself, cell has border */
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 1rem; /* Match cell font size */
+  font-family: 'Roboto', sans-serif; /* Ensure Roboto */
+  background-color: transparent; /* Transparent background */
+  color: #333333; /* Dark Grey text */
+  padding: 0; /* Remove any default padding */
+}
+
+.crossword-input:focus {
+  outline: none;
+  background-color: rgba(82, 171, 152, 0.15); /* Very light Primary shade for focus */
+}
+
+.crossword-cell.black-cell { /* Style for black cells (non-input cells) */
+    background-color: #333333; /* Dark Grey/Off-Black */
+    border-color: #333333; /* Match background for seamless look */
+}
+
+.word-number {
+  position: absolute;
+  top: 1px; /* Fine-tune positioning */
+  left: 2px; /* Fine-tune positioning */
+  font-size: 0.6rem; /* Smaller number, less obtrusive */
+  color: #6c757d; /* Neutral grey for numbers */
+  font-family: 'Roboto', sans-serif; /* Ensure Roboto */
+}
+
+.clues-container {
+  display: flex;
+  justify-content: space-around; /* Space out clue sections */
+  margin-top: 20px;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  font-family: 'Roboto', sans-serif; /* Ensure Roboto for clue text */
+}
+
+.clues-section {
+  width: 48%; /* Adjust width for spacing, allowing two columns on wider screens */
+  margin-bottom: 1.5rem; /* Space below each clue section */
+}
+.clues-section h3 { /* Clue titles (Across, Down) */
+  font-family: 'Montserrat', sans-serif; /* Use heading font */
+  font-size: 1.25rem;
+  color: #52ab98; /* Primary color for clue titles */
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #52ab98; /* Primary color underline */
+}
+.clues-section ul {
+  list-style-type: none; /* Remove default list bullets */
+  padding: 0;
+}
+.clues-section li {
+  margin-bottom: 0.5rem; /* Space between clues */
+  font-size: 0.9rem; /* Slightly smaller font for clues */
+  line-height: 1.5; /* Improve readability */
+}
+
+/* Correct/Incorrect Cell Highlighting */
+.crossword-input.correct {
+  background-color: #28a745 !important; /* Success Green */
+  color: white !important; /* Ensure text is visible */
+}
+.crossword-input.incorrect {
+  background-color: #dc3545 !important; /* Error Red */
+  color: white !important; /* Ensure text is visible */
+}
+/* End of Game Display Element Styles */
+
+/* Utility & Cleanup */
+.error-message { /* For form validation errors or other error messages */
+  color: #dc3545; /* Error Red */
+  font-size: 0.875em; /* Slightly smaller than standard text */
+  margin-top: 0.25rem; /* Space above the message */
+  display: block; /* Ensure it takes its own line */
+}
+
+.success-message { /* For success feedback */
+  color: #28a745; /* Success Green */
+  background-color: #d4edda; /* Light green background */
+  border: 1px solid #c3e6cb; /* Greenish border */
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem; /* Space below the message */
+  text-align: center;
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem; /* More padding for visibility */
+  font-size: 1.25rem;
+  color: #52ab98; /* Primary color */
+  font-family: 'Montserrat', sans-serif; /* Consistent with headings/prominent text */
+}
+
+/* Commenting out old .container style to assess impact - likely to be removed */
+/*
+.container { 
     text-align: center;
     width: 80%;
     margin: 0 auto; 
     padding-top: 100px;
 }
-nav {  /* Style your nav as needed */
+*/
+
+nav {  /* Old nav style - THIS IS FULLY REPLACED by #main-nav */
     /* Example: */
-    display: inline-block; /* Or flex, etc. */
-}
-textarea {
-    width: 100%;
-    height: 200px;
-    resize: vertical;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    box-sizing: border-box;
+    /* display: inline-block; /* Or flex, etc. */
 }
 
-input[type="number"] {
-    width: 50px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
+textarea { /* OLD textarea style - THIS IS NOW SUPERSEDED by the new form styles */
+    /* width: 100%; */
+    /* height: 200px; */
+    /* resize: vertical; */
+    /* padding: 10px; */
+    /* border: 1px solid #ccc; */
+    /* border-radius: 3px; */
 }
 
-button {
+input[type="number"] { /* OLD input[type="number"] style - THIS IS NOW SUPERSEDED */
+    /* width: 50px; */
+    /* padding: 5px; */
+    /* border: 1px solid #ccc; */
+    /* border-radius: 3px; */
+}
+
+/* REMOVING OLD GENERIC button styles */
+/*
+button { 
     padding: 12px 24px;
     background-color: #ff9800; 
     color: white;
@@ -84,222 +556,60 @@ button::before {
 button:hover::before {
     transform: translateY(0);
 }
+*/
 
-#crossword-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
+/* The old #crossword-container, .crossword-table, .crossword-table td, .crossword-input, .crossword-input:focus, 
+   .clues-container, .clues-section, .clues-section h3, ul, li, .error, .timer-container, 
+   .rainbow-text, .success-message (old one), .crossword-cell, .crossword-cell:focus, #clues-container (duplicate), 
+   .word-number are now effectively replaced or will be by the new Game Display Element Styles or general typography.
+   The old specific #crossword-form styles are also handled.
+*/
+
+/* OLD .error style - replaced by .error-message */
+/*
+.error { 
+    color: red; 
+    font-weight: bold;
 }
+*/
 
-.crossword-table {
-    border-collapse: collapse;
+/* OLD .timer-container style */
+.timer-container { /* This style might need to be updated or kept if timer is still used */
     margin: 20px auto;
-}
-.crossword-table td {
-    width: 30px;
-    height: 30px;
-    position: relative;
-    text-align: center;
-    font-size: 16px; 
-    font-family: 'Roboto', sans-serif;
+    font-size: 1.2em; /* Consider standardizing font sizes */
+    font-weight: bold; /* Consider if this emphasis is needed or use Montserrat */
+    font-family: 'Roboto', sans-serif; /* Ensure font consistency */
 }
 
-.crossword-input {
-    width: 28px;
-    height: 28px;
-    border: none;
-    text-align: center;
-    text-transform: uppercase;
-    font-weight: bold;
-    font-size: 16px;
-    background-color: #fff;
-}
-
-.crossword-input:focus {
-    outline: none;
-    background-color: #e0f7fa;
-}
+/* OLD .rainbow-text, specific h1, .success-message (old one) */
+/* .rainbow-text is handled by header h1.rainbow-text */
+/* h1 default is handled by global typography */
+/* Old .success-message is replaced by new .success-message class */
 
 
-.clues-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-}
+/* OLD .crossword-cell and .crossword-cell:focus are covered by .crossword-table td and .crossword-input:focus */
 
-.clues-section {
-    width: 45%;
-}
+/* OLD #clues-container (duplicate) and .clues-section styles are covered by new .clues-container and .clues-section */
 
-.clues-section h3 {
-    margin-bottom: 10px;
-}
+/* OLD .word-number is covered by new .word-number */
 
-.clues-section ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-.clues-section li {
-    margin-bottom: 5px;
-}
-
-.error {
-    color: red;
-    font-weight: bold;
-}
-
-.timer-container {
-    margin: 20px auto;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-/* Это стиль для названия нашего */
-.rainbow-text { 
-    color: rgb(81, 56, 136) ; 
-}
-h1 {
-    font-family: 'Press Start 2P', monospace; 
-} 
-.success-message {
-    font-size: 20px;
-    color: green;
-    text-align: center; /* или любое другое выравнивание */
-    padding: 20px;
-    /* Добавьте другие стили по вашему усмотрению */
-}
-
-.crossword-cell {
-    border: 1px solid black;
-    width: 30px;
-    height: 30px;
-    text-align: center;
-    font-size: 16px;
-    font-family: 'Roboto', sans-serif;
-}
-
-.crossword-cell:focus { 
-    outline: none;
-    background-color: #e0f7fa;
-}
+/* OLD #crossword-form specific element styles are handled by generic form styles and view container layouts */
 
 
-#clues-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-}
+/* Basic Popup Styles - OLD STYLES - SUPERSEDED BY NEW .popup and .popup-content above */
+/* ... (previous commented out popup styles remain commented out) ... */
 
-.clues-section {
-    width: 45%;
-}
 
-.word-number {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    font-size: 10px;
-    color: gray;
-}
-
-#crossword-form label,
-#crossword-form select,
-#topic,
-#file-upload,
-#crossword-form textarea,
-#crossword-form button {
-    box-sizing: border-box; /*  Включаем padding и border в ширину */
-    display: block;  /*  Каждый элемент на новой строке */
-    margin-bottom: 10px; /*  Отступ снизу */
-    margin: 0 auto;
-    margin-top: 10px;
-}
-
-#crossword-form input[type="number"] {
-    width: 55px; /*  Фиксированная ширина для number input */
-}
-/* Basic Popup Styles */
-.popup {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-}
-
-.popup-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Less width for the popup */
-    max-width: 400px; /* Maximum width of the popup */
-    border-radius: 5px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
-}
-
-/* Close Button */
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Form Styling Inside Popups */
-.popup-content h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.popup-content input[type="text"],
-.popup-content input[type="email"],
-.popup-content input[type="password"] {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    border-radius: 4px;
-}
-
-.popup-content button {
-    background-color: #4caf50;
-    color: white;
-    padding: 14px 20px;
-    margin: 8px 0;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    border-radius: 4px;
-}
-
-.popup-content button:hover {
-    opacity: 0.8;
-}
-
-/* Стили для кнопок аутентификации */
-.auth-buttons {
+/* Стили для кнопок аутентификации - OLD STYLES - These should be replaced by using .btn classes in HTML */
+/*
+.auth-buttons { 
     display: flex;
     gap: 10px;
     justify-content: center;
     margin: 10px 0;
 }
 
-.auth-btn {
+.auth-btn { 
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
@@ -313,16 +623,21 @@ h1 {
 .auth-btn:hover {
     background-color: #45a049;
 }
+*/
 
-/* Стили для профиля */
-#profile-area {
+/* Стили для профиля - OLD STYLE - if #profile-area is used, it should be restyled or use new view container styles */
+/*
+#profile-area { 
     background-color: #f8f8f8;
     padding: 15px;
     border-radius: 4px;
     margin: 10px 0;
 }
+*/
 
-#logout-button {
+/* OLD #logout-button style - This button should adopt .btn .btn-danger classes in HTML */
+/*
+#logout-button { 
     background-color: #f44336;
     color: white;
     padding: 8px 16px;
@@ -334,90 +649,178 @@ h1 {
 #logout-button:hover {
     background-color: #da190b;
 }
+*/
 
-.show-answer-button {
+.show-answer-button { /* This button might need to be updated with .btn .btn-secondary or similar in HTML */
     /* Стили для кнопки */
-    margin-left: 10px; /* Отступ от текста подсказки */
+    margin-left: 10px; 
     padding: 5px 10px;
-    font-size: 12px; /* Или другой подходящий размер */
-    cursor: pointer;  /* Курсор в виде руки */
+    font-size: 12px; 
+    cursor: pointer;
 }
 
-/* style.css */
+/* OLD .loading-indicator style is now updated by the new .loading-indicator */
+/*
 .loading-indicator {
     display: flex;
-    justify-content: center; /* Центрируем по горизонтали */
-    align-items: center; /* Центрируем по вертикали */
-    height: 100px; /* Или другая подходящая высота */
-    font-size: 20px; /* Или другой размер шрифта */
+    justify-content: center; 
+    align-items: center; 
+    height: 100px; 
+    font-size: 20px; 
+}
+*/
+/* End of Utility & Cleanup Section */
+
+/* Word Soup specific styles - review if they need updates based on new palette */
+.word-soup-table td.selected {
+    background-color: #FFD700; /* Accent Color - Sunny Yellow for selection */
+    color: #333333; /* Dark Grey text for contrast */
+}
+.word-soup-table td.highlighted { /* For found words */
+    background-color: #52ab98; /* Primary Color - Teal/Blue */
+    color: white; /* White text for contrast */
+}
+.word-soup-table td.correct-path { /* For indicating correct path during selection */
+  background-color: rgba(255, 215, 0, 0.5); /* Lighter Accent - Sunny Yellow with opacity */
+}
+#word-soup-words ul { /* Ensure word list also uses Roboto */
+    font-family: 'Roboto', sans-serif;
+}
+#word-soup-words li.found {
+    text-decoration: line-through;
+    color: #28a745; /* Success Green for found words */
+    font-style: italic;
 }
 
-@media (max-width: 768px) { /*  Или другое значение ширины экрана */
 
-    #crossword-form label,
-    #crossword-form select,
-    #crossword-form input,
-    #crossword-form textarea,
-    #crossword-form button[type="submit"] {
-      font-size: 14px; /* Уменьшаем размер шрифта */
-    }
+/* Responsive Styles */
+@media (max-width: 992px) { /* Adjustments for tablets and smaller desktops */
+  header {
+    padding: 1rem; /* Reduce padding slightly */
+  }
+  header h1.rainbow-text { /* Logo size */
+    font-size: 1.6rem;
+  }
+  #main-nav li {
+    margin-left: 15px; /* Reduce spacing between nav items */
+  }
+  #main-nav li a {
+    padding: 0.4rem 0.6rem; /* Adjust padding for nav links */
+  }
+  main {
+    padding: 1rem; /* Reduce padding for main content area */
+  }
+  #dashboard-view,
+  #game-creation-view,
+  #game-solving-view {
+    padding: 1rem; /* Reduce padding inside views */
+  }
+}
 
-    .crossword-table {
-        width: 100%; /* Кроссворд занимает всю ширину */
-        table-layout: fixed; /* Фиксированная ширина столбцов */
-        overflow-x: auto; /*  Горизонтальный скролл, если кроссворд не влезает */
-        display: block;  /*  Чтобы скролл работал */
-        white-space: nowrap; /*  Предотвращаем перенос слов в ячейках */
+@media (max-width: 768px) { /* Adjustments for mobile devices */
+  body {
+    font-size: 15px; /* Slightly smaller base font size for mobile */
+  }
+  h1 { font-size: 2rem; } /* Adjust heading sizes for mobile */
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
 
-    }
+  header { /* Stack header items vertically */
+    flex-direction: column;
+    align-items: flex-start; /* Align logo to the left */
+    padding: 1rem; /* Consistent padding */
+  }
+  #main-nav {
+    margin-top: 1rem; /* Space between logo and nav */
+    width: 100%; /* Nav takes full width */
+  }
+  #main-nav ul {
+    flex-direction: column; /* Stack nav items vertically */
+    align-items: flex-start; /* Align nav items to the left */
+    width: 100%;
+  }
+  #main-nav li {
+    margin-left: 0; /* Remove left margin for vertical stacking */
+    width: 100%; /* Each nav item takes full width */
+  }
+  #main-nav li a {
+    display: block; /* Make links take full width for easier tapping */
+    padding: 0.75rem; /* Larger padding for tap targets */
+    border-bottom: 1px solid rgba(255,255,255,0.1); /* Subtle separator for vertical nav */
+  }
+  #main-nav li:last-child a {
+    border-bottom: none; /* Remove border from last item */
+  }
+  .profile-menu-container .dropdown-content { /* Dropdown becomes part of the flow */
+    position: static; 
+    width: 100%;
+    box-shadow: none;
+    border-top: 1px solid rgba(255,255,255,0.1); /* Separator for dropdown items */
+  }
 
-    #clues-container {
-        flex-direction: column; /* Подсказки друг под другом */
-        margin-top: 20px; /*  Отступ сверху от кроссворда */
-    }
+  .popup-content { /* Adjust popups for smaller screens */
+    margin: 5% auto; /* Reduce top margin */
+    width: 95%; /* More width for content */
+    padding: 1.5rem; /* Adjust padding */
+  }
 
-    .clues-section {
-        width: 100%; /*  Подсказки занимают всю ширину */
-        margin-bottom: 10px; /*  Отступ снизу */
-    }
-    .container {
-        overflow-x: hidden;  /* Убираем горизонтальный скролл у контейнера */
-      }
-      header {
-        flex-direction: column; /*  Элементы хедера располагаются друг под другом */
-        align-items: center; /* Центрируем элементы по горизонтали */
-        padding: 10px; /* Уменьшаем padding */
-    }
+  .clues-section { /* Clue sections stack on smaller screens */
+    width: 100%; 
+    margin-bottom: 1rem;
+  }
+  .clues-section:last-child {
+    margin-bottom: 0;
+  }
 
-    header nav {
-        margin-top: 10px; /*  Отступ сверху от заголовка */
-        display: flex;         /* Делаем nav flex-контейнером */
-        flex-direction: column; /* Располагаем ссылки друг под другом */
-        align-items: center; /* Центрируем ссылки */
-    }
+  .crossword-table td { /* Reduce cell size for mobile */
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem; /* Adjust font size in cells */
+  }
+  .word-number {
+    font-size: 0.5rem; /* Adjust word number size */
+  }
 
-    header nav a {
-        display: block;  /*  Занимаем всю ширину */
-        margin-bottom: 5px;  /*  Отступ между ссылками */
-        text-align: center;  /*  Центрируем текст ссылок */
-        padding: 5px; /*  Небольшой padding */
-        font-size: 14px;
-    }
-    .auth-buttons {
-        margin-top: 10px; /*  Отступ сверху от навигации */
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
+  /* Old responsive styles that might conflict or are superseded */
+    /* #crossword-form label, ... { font-size: 14px; } /* New generic form styles + body font size should handle this */
+    /* .crossword-table { ... } /* New .crossword-table td and overflow-x on container should handle this */
+    /* #clues-container { flex-direction: column; ... } /* New .clues-section width: 100% handles stacking */
+    /* .container { overflow-x: hidden; } /* Old container, likely removed */
+    /* header (old) { flex-direction: column; ... } /* New header responsive styles are in place */
+    /* header nav (old) { ... } /* New #main-nav responsive styles are in place */
+    /* .auth-buttons (old) { ... } /* Old auth buttons, likely removed/replaced */
+}
 
-      }
+@media (max-width: 576px) { /* Further adjustments for very small screens */
+  body {
+    font-size: 14px; /* Even smaller base font */
+  }
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.6rem; }
+  h3 { font-size: 1.4rem; }
 
-    .auth-buttons .auth-btn{
-        margin-bottom: 5px; /* Отступ между кнопками */
-        width: 100%;
-
-    }
-    #open-profile-popup {
-        width: 100%;
-      }
-
+  .btn { /* Smaller buttons */
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select { /* Smaller form elements */
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+  }
+  .crossword-table td { /* Even smaller cells */
+    width: 25px;
+    height: 25px;
+    font-size: 0.8rem;
+  }
+  header h1.rainbow-text { /* Smaller logo */
+    font-size: 1.4rem;
+  }
+  .popup-content {
+    padding: 1rem; /* Less padding in popups */
+  }
 }
