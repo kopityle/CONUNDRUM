@@ -34,7 +34,7 @@ jobs:
 
       - name: Check backend URL for GitHub Pages
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           if [ -z "$VITE_API_URL" ]; then
             echo "::warning::VITE_API_URL is empty. GitHub Pages cannot proxy /api, so POST requests will fail with 405. Set VITE_API_URL to the backend origin."
@@ -44,10 +44,10 @@ jobs:
         working-directory: client
         env:
           GITHUB_PAGES: 'true'
-          # Задайте в Settings -> Secrets and variables -> Actions -> Variables,
+          # Задайте в Settings -> Secrets and variables -> Actions -> Secrets,
           # если фронтенд должен стучаться отдельно на backend.
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
-          VITE_BASE_URL: ${{ vars.VITE_BASE_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
         run: npm run build
 
       - name: Add SPA fallback for deep links
