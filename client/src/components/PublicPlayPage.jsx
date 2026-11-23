@@ -19,11 +19,13 @@ const PublicPlayPage = () => {
     const [puzzle, setPuzzle] = useState(null);
     const [studentName, setStudentName] = useState('');
     const [result, setResult] = useState(null);
+    const [submitFailed, setSubmitFailed] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
 
     const trackerRef = useRef(null);
     if (!trackerRef.current) trackerRef.current = new ActivityTracker();
     const submittedRef = useRef(false);
+    const pendingSubmissionRef = useRef(null);
 
     useEffect(() => {
         let canceled = false;
@@ -55,6 +57,8 @@ const PublicPlayPage = () => {
         }
 
         submittedRef.current = false;
+        setSubmitFailed(false);
+        pendingSubmissionRef.current = null;
         trackerRef.current.reset();
         trackerRef.current.startTracking();
         setResult(null);
@@ -79,14 +83,19 @@ const PublicPlayPage = () => {
         const wrongWords = stats?.wrongWords || [];
         const hintedWords = stats?.hintedWords || [];
 
+        const submission = {
+            student_name: finalName,
+            score,
+            duration_sec: durationSec,
+            wrong_words: wrongWords,
+        };
+        pendingSubmissionRef.current = submission;
+        setSubmitFailed(false);
         try {
-            await submitAttempt(shareId, {
-                student_name: finalName,
-                score,
-                duration_sec: durationSec,
-                wrong_words: wrongWords,
-            });
+            await submitAttempt(shareId, submission);
+            pendingSubmissionRef.current = null;
         } catch (error) {
+            setSubmitFailed(true);
             notifyError(error.message || 'Не удалось сохранить результат.');
         }
 
@@ -101,6 +110,18 @@ const PublicPlayPage = () => {
         });
         setPhase('complete');
     }, [notifyError, shareId, studentName]);
+
+    const retrySubmit = useCallback(async () => {
+        const submission = pendingSubmissionRef.current;
+        if (!submission) return;
+        try {
+            await submitAttempt(shareId, submission);
+            pendingSubmissionRef.current = null;
+            setSubmitFailed(false);
+        } catch (error) {
+            notifyError(error.message || 'Не удалось сохранить результат.');
+        }
+    }, [notifyError, shareId]);
 
     const gameData = puzzle?.game_data
         ? { ...puzzle.game_data, gameType: puzzle.game_type || puzzle.game_data.gameType }
@@ -210,6 +231,14 @@ const PublicPlayPage = () => {
                                 onDownloadPdf={handleDownloadPdf}
                                 onRestart={handleRestart}
                             />
+                            {submitFailed && (
+                                <div className='public-play-submit-error' role='status'>
+                                    <p>Результат не удалось сохранить. Проверьте соединение и попробуйте снова.</p>
+                                    <button type='button' className='public-play-button' onClick={retrySubmit}>
+                                        Повторить отправку результата
+                                    </button>
+                                </div>
+                            )}
                             <Link className='public-play-home-link' to='/'>На главную</Link>
                         </div>
                     )}

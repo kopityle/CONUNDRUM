@@ -98,17 +98,40 @@
     text-decoration: none;
 }
 
+.public-play-submit-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-block-start: 16px;
+    padding: 12px;
+    border: 1px solid rgba(237, 126, 152, 0.6);
+    border-radius: 10px;
+    background: rgba(237, 126, 152, 0.12);
+    text-align: center;
+}
+
 @media (max-width: 640px) {
     .public-play-main {
-        padding: 12px;
+        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
     }
 
     .public-play-card {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        box-sizing: border-box;
         padding: 18px;
     }
 
     .public-play-step h1,
     .public-play-game h1 {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        overflow-wrap: anywhere;
         font-size: 22px;
+    }
+
+    #display-game-on-screen {
+        min-block-size: auto;
     }
 }

@@ -60,6 +60,8 @@ VITE_API_URL=
 VITE_BASE_URL=http://localhost
 ```
 
+`VITE_API_URL` можно оставить пустым только там, где `/api` проксируется (Vite dev server или nginx в Docker). Для GitHub Pages укажите абсолютный адрес бэкенда без завершающего слеша, например `https://api.example.com`; иначе POST-запросы к статическому хостингу вернут `405 Not Allowed`. Значение читается через `import.meta.env.VITE_API_URL` во всех клиентских запросах.
+
 ### 2) `server/.env`
 
 ```env
@@ -67,6 +69,8 @@ PORT=5000
 NODE_ENV=production
 
 # CORS / сессии / JWT
+# Можно перечислить несколько origin через запятую: https://one.example,https://two.example
+# Для GitHub Pages обязательно добавьте https://<user>.github.io
 ALLOWED_ORIGINS=http://localhost
 SESSION_SECRET=<strong-session-secret>
 JWT_SECRET=<optional-jwt-secret>          # если не задан — используется SESSION_SECRET

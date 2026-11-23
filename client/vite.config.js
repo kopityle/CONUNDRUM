@@ -27,7 +27,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://localhost:5000'
+      // http-proxy передаёт все методы (GET/POST/PUT/DELETE/OPTIONS) без изменений.
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      }
     }
   },
   test: {

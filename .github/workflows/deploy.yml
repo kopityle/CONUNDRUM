@@ -32,6 +32,14 @@ jobs:
         working-directory: client
         run: npm ci
 
+      - name: Check backend URL for GitHub Pages
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "::warning::VITE_API_URL is empty. GitHub Pages cannot proxy /api, so POST requests will fail with 405. Set VITE_API_URL to the backend origin."
+          fi
+
       - name: Build client
         working-directory: client
         env:

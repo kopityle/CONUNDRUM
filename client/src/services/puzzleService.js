@@ -1,5 +1,5 @@
 // src/services/puzzleService.js
-import { apiFetch } from './authService';
+import { apiFetch, apiUrl } from './authService';
 
 const normalizePuzzles = (data) => {
     if (Array.isArray(data)) return data;
@@ -68,7 +68,7 @@ export const downloadGamePdf = async ({
         : '');
     if (resolvedShareUrl) payload.shareUrl = resolvedShareUrl;
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/generate-pdf`, {
+    const response = await fetch(apiUrl('/api/generate-pdf'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -96,7 +96,7 @@ export const downloadGamePdf = async ({
 };
 
 export const fetchRegeneratedLayout = async (gameType, wordsAndClues) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/recalculate-game-layout`, {
+    const response = await fetch(apiUrl('/api/recalculate-game-layout'), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

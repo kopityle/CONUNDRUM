@@ -481,7 +481,24 @@
 
 
     .saved-games-list {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: minmax(0, 1fr);
+        inline-size: auto;
+        margin: 10px;
+    }
+
+    .saved-games-item {
+        overflow: visible;
+    }
+
+    .saved-game-info div,
+    .saved-games-item p {
+        min-inline-size: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .tag-remove {
+        inset-inline-end: 0;
+        inset-block-start: 0;
     }
 
     .user-tags-content {

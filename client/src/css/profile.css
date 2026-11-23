@@ -314,12 +314,30 @@
 
 @media (max-width: 500px) {
 
+    .profile-info-left,
+    .user-saved-games-and-tags {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        width: auto;
+    }
+
     .about-account-info {
-        width: 100%;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        block-size: auto;
+        max-block-size: none;
+        overflow: visible;
     }
 
     .profile-and-games {
-        height: 80vh;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        block-size: auto;
+        min-block-size: 100dvh;
+        height: auto;
+        padding-block: 12px 24px;
+        scrollbar-width: auto;
     }
 
     .profile-title h1 {

@@ -45,8 +45,10 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100vh;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-block-size: 100dvh;
+    block-size: auto;
 }
 
 #game-logotype {
@@ -797,25 +799,34 @@ input[name="gameType"]:not(:checked) + label::before {
         font-size: 18px;
     }
 
-    .creating-puzzle-input-data.hidden {
+    .creating-puzzle-input-data.hidden,
+    .creating-puzzle-input-data.visible {
         top: 10px;
-        left: 60px;
+        left: 56px;
+        right: 10px;
+        inline-size: auto;
+        max-inline-size: none;
+        box-sizing: border-box;
         padding: 10px;
         border-radius: 15px;
     }
 
     .creating-puzzle-input-data.visible {
-        top: 10px;
-        left: 60px;
-        padding: 10px;
-        border-radius: 15px;
+        max-block-size: calc(100dvh - 70px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
     }
 
     .input-puzzle-name {
+        box-sizing: border-box;
+        inline-size: 100%;
+        max-inline-size: 100%;
         padding: 3px 5px;
         font-size: 18px;
         border-radius: 10px;
-        width: calc(100% - 10px);
     }
 
     .topic-input input {
@@ -907,14 +918,17 @@ input[name="gameType"]:not(:checked) + label::before {
         width: calc(100% - 20px) !important;
     }
 
-    .editable-clue-textarea {
-        width: auto;
-        flex: 2;
+    .word-item:has(.editable-clue-textarea) {
+        flex-wrap: wrap;
+        gap: 6px 8px;
     }
 
+    .editable-clue-textarea,
     .editable-word-input {
-        width: auto;
-        flex: 1;
+        min-inline-size: 0;
+        inline-size: 100%;
+        flex: 1 1 100%;
+        box-sizing: border-box;
     }
 
     .edit-puzzle-info-wrapper {

@@ -248,10 +248,31 @@
 
 @media (max-width: 640px) {
     .post-game-review {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        margin-block-start: 12px;
         padding: 16px;
+        box-sizing: border-box;
     }
 
     .review-title {
         font-size: 20px;
+    }
+
+    .review-flashcards {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .review-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .review-mode-toggle,
+    .review-action {
+        inline-size: 100%;
+        box-sizing: border-box;
+        white-space: normal;
     }
 }

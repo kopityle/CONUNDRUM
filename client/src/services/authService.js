@@ -1,4 +1,7 @@
 // src/services/authService.js
+import { apiUrl } from './apiConfig';
+
+export { apiUrl } from './apiConfig';
 export const TOKEN_STORAGE_KEY = 'conundrum_token';
 export const AUTH_CHANGED_EVENT = 'auth-changed';
 
@@ -60,7 +63,7 @@ export const apiFetch = async (path, options = {}) => {
         requestBody = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL || ''}${path}`, {
+    const response = await fetch(apiUrl(path), {
         ...rest,
         credentials: 'include',
         headers: requestHeaders,

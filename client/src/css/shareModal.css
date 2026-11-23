@@ -5,14 +5,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
     background: rgba(47, 45, 56, 0.65);
 }
 
 .shared-game-modal {
     position: relative;
     width: min(460px, 100%);
-    max-height: calc(100vh - 32px);
+    max-inline-size: calc(100vw - 32px);
+    max-height: calc(100dvh - 32px);
     overflow-y: auto;
     box-sizing: border-box;
     padding: 28px 24px;
@@ -139,4 +140,18 @@
 .auth-required-copy-button {
     background: rgba(251, 251, 254, 0.92);
     color: #2F2D38;
+}
+
+@media (max-width: 380px) {
+    .shared-game-modal {
+        padding: 24px 16px;
+    }
+
+    .shared-game-link-row {
+        flex-wrap: wrap;
+    }
+
+    .shared-game-copy-button {
+        inline-size: 100%;
+    }
 }

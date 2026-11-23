@@ -81,6 +81,19 @@
 
 
 
+@media (max-width: 600px) {
+    .functional-buttons-wrapper {
+        flex-wrap: wrap;
+        max-inline-size: 100%;
+    }
+
+    .main-page-header {
+        inline-size: auto;
+        max-inline-size: calc(100vw - 16px);
+        margin-inline: auto;
+    }
+}
+
 @media (max-width: 550px) {
     .main-page-header {
         gap: 7px;

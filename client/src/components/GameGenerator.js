@@ -10,6 +10,7 @@ import NotificationBanner from './NotificationBanner';
 import useNotifications from '../hooks/useNotifications';
 import ActivityTracker from '../modules/ActivityTracker';
 import GameLogotype from '../assets/svg/GameLogotype';
+import { apiUrl } from '../services/apiConfig';
 import {
     createPuzzle,
     getPuzzle,
@@ -70,15 +71,15 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
 
     const submitLTIScore = useCallback(async (score) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/lti/submit-score`, {
+            const response = await fetch(apiUrl('/api/lti/submit-score'), {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ score, totalScore: 100 }),
             });
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Failed to submit score: ${errorData.error || response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to submit score (${response.status}): ${errorData.error || response.statusText}`);
             }
         } catch (error) {
             console.error('Error submitting LTI score:', error);
@@ -126,13 +127,13 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             if (config.inputType === 'text') formData.append('text', config.text);
             else if (config.inputType === 'topic') formData.append('topic', config.topic);
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/generate-game`, {
+            const response = await fetch(apiUrl('/api/generate-game'), {
                 method: 'POST',
                 body: formData,
             });
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || response.statusText);
+                throw new Error(errorData.error || `Ошибка запроса (${response.status}) ${response.statusText}`.trim());
             }
 
             const data = await response.json();
@@ -239,6 +240,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             notifyError('Пожалуйста, заполните все обязательные поля.');
             return;
         }
+        // В режиме решения LTI-задания файл недоступен, поэтому сохраняем только text/topic.
+        if (!['text', 'topic'].includes(params.inputType)) {
+            notifyError('Для LTI-задания доступны только ввод текста и тема.');
+            return;
+        }
 
         setIsLoading(true);
         try {
@@ -296,13 +302,13 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             else if (inputType === 'topic') formData.append('topic', topic);
             else if (inputType === 'file' && file) formData.append('file-upload', file);
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/generate-game`, {
+            const response = await fetch(apiUrl('/api/generate-game'), {
                 method: 'POST',
                 body: formData,
             });
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Failed to generate games: ${errorData.error || response.status}`);
+                throw new Error(`Failed to generate games: ${errorData.error || `ошибка ${response.status} ${response.statusText}`.trim()}`);
             }
 
             const data = await response.json();

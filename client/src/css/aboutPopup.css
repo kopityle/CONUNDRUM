@@ -142,3 +142,25 @@
         margin-top: 8px;
     }
 }
+
+@media (max-width: 600px) {
+    .about-popup {
+        max-inline-size: calc(100vw - 16px);
+    }
+
+    .about-popup-div {
+        max-block-size: min(70dvh, 500px);
+        overflow: auto;
+    }
+
+    .about-popup-paragraphs h3,
+    .about-popup-paragraphs p {
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .about-popup-paragraphs {
+        text-align: left;
+    }
+}

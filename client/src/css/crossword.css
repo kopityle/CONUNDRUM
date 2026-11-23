@@ -41,17 +41,14 @@
     overflow-x: hidden;
 }
 
-#crossword-container {
-    overflow: auto;
-    scrollbar-width: none;
-}
-
 #crossword-container, #clues-container {
     position: relative;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     width: fit-content;
+    box-sizing: border-box;
+    max-inline-size: 100%;
+    min-inline-size: 0;
     border-radius: 30px;
     padding: 25px;
     background: rgba(81, 56, 136, 0.5);
@@ -63,6 +60,18 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.5),
         inset 0 -1px 0 rgba(255, 255, 255, 0.1),
         inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
+}
+
+#crossword-container {
+    overflow: auto;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+#clues-container {
+    overflow-x: clip;
+    overflow-y: auto;
 }
 
 #crossword-container::before, #clues-container::before {
@@ -531,35 +540,86 @@ input.crossword-input:focus {
     }
 }
 
+@media (max-width: 820px) {
+    /* На планшетах и телефонах игровое поле и разбор ошибок идут колонкой. */
+    #display-game-on-screen {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        block-size: auto;
+        min-block-size: 100dvh;
+        overflow-y: auto;
+        overflow-x: clip;
+        padding-block-end: 16px;
+    }
+
+    #crossword-and-clues,
+    .post-game-review {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        flex: none;
+    }
+
+    #crossword-and-clues {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        block-size: auto;
+        overflow-y: visible;
+    }
+}
+
 @media (max-width: 600px) {
     #crossword-and-clues {
-        width: calc(100% - 6px);
-        padding: 75px 6px 20px 0;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        min-inline-size: 0;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 12px;
+        padding: 64px 12px 20px;
+        box-sizing: border-box;
+        overflow-x: clip;
+        overflow-y: visible;
     }
 
     #crossword-container, #clues-container {
+        inline-size: 100%;
+        max-inline-size: 100%;
         border-radius: 13px;
         padding: 10px;
     }
 
     #crossword-container {
         overflow: auto;
-        scrollbar-width: none;
+        scrollbar-width: thin;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     #clues-container {
         gap: 20px;
+        overflow: visible;
     }
 
-    .crossword-table td {
-        width: 30px;
-        height: 30px;
+    .crossword-table {
+        inline-size: max-content;
+        max-inline-size: none;
+    }
+
+    .crossword-table td,
+    input.crossword-input {
+        inline-size: clamp(26px, 7.5vw, 30px);
+        block-size: clamp(26px, 7.5vw, 30px);
     }
 
     input.crossword-input {
-        width: 30px;
-        height: 30px;
-        font-size: 18px;
+        font-size: clamp(14px, 4.5vw, 18px);
     }
 
     td.crossword-cell span {
@@ -570,11 +630,32 @@ input.crossword-input:focus {
         font-size: 18px;
     }
 
+    .word-item {
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        min-inline-size: 0;
+    }
+
+    .clue-position {
+        flex: 0 0 1.5em;
+        max-inline-size: none;
+    }
+
+    .clue-text-content {
+        flex: 1 1 12ch;
+        min-inline-size: 0;
+        overflow-wrap: anywhere;
+        text-align: left;
+    }
+
     .word-item span {
         font-size: 18px;
     }
 
     .show-answer-button {
+        flex: none;
+        margin-inline-start: auto;
+        white-space: nowrap;
         padding: 2px 4px;
         font-size: 18px;
         border-radius: 5px;
@@ -593,13 +674,31 @@ input.crossword-input:focus {
         border-radius: 10px;
     }
 
+    .word-soup-container {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        block-size: auto;
+        aspect-ratio: auto;
+        overflow: auto;
+        touch-action: pan-x pan-y;
+        scrollbar-width: thin;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .word-soup-grid {
+        inline-size: 100%;
+        max-inline-size: 100%;
+        table-layout: fixed;
+    }
 
     .word-soup-cell {
-        width: 25px;
-        height: 25px;
-        font-size: 18px;
-        padding: 0 4px;
-        line-height: 1.5;
+        inline-size: auto;
+        block-size: auto;
+        aspect-ratio: 1 / 1;
+        font-size: clamp(12px, 4vw, 18px);
+        padding: 0;
+        line-height: 1;
     }
 
     .success-message h2 {

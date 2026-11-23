@@ -204,6 +204,40 @@
     .btn-show-answer {
         width: 100%;
     }
+
+    .rebus-interaction {
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: stretch;
+    }
+
+    .rebus-input,
+    .btn-check {
+        inline-size: 100%;
+        min-inline-size: 0;
+        box-sizing: border-box;
+    }
+
+    .rebus-input {
+        flex: 1 1 100%;
+        font-size: 18px;
+    }
+
+    .btn-check {
+        flex: 1 1 100%;
+    }
+
+    .commas {
+        font-size: clamp(18px, 5vw, 28px);
+    }
+
+    .commas-left {
+        margin-inline-end: 4px;
+    }
+
+    .commas-right {
+        margin-inline-start: 4px;
+    }
 }
 
 

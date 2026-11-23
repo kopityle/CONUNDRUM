@@ -239,12 +239,10 @@ const WordSoupBoard = ({ grid = [], words = [], onAttempt, onComplete, onWordFou
                                         aria-label={`Буква ${rowIndex + 1}, ${colIndex + 1}: ${letter}`}
                                         onMouseDown={() => startSelection(cell)}
                                         onMouseOver={() => continueSelection(cell)}
-                                        onTouchStart={(event) => {
-                                            event.preventDefault();
-                                            startSelection(cell);
-                                        }}
+                                        onTouchStart={() => startSelection(cell)}
                                         onTouchMove={(event) => {
-                                            event.preventDefault();
+                                            // Не блокируем preventDefault: на мобильных сетка
+                                            // должна прокручиваться жестом, если она шире экрана.
                                             const touch = event.touches?.[0];
                                             const element = touch
                                                 ? document.elementFromPoint(touch.clientX, touch.clientY)

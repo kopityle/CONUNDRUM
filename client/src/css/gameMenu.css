@@ -106,7 +106,10 @@
   }
 
   .game-menu-sidebar.open {
-    max-height: 500px; 
+    max-height: min(500px, calc(100dvh - 20px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 
   .game-menu-sidebar button {
