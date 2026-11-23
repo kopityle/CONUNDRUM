@@ -1,148 +1,62 @@
 // src/services/puzzleService.js
-import { getSupabaseClient } from '../config/supabaseClient';
+import { apiFetch } from './authService';
 
-export const savePuzzleToSupabase = async (puzzleDataToSave) => {
-    const supabase = await getSupabaseClient();
-    // Получаем текущего пользователя Supabase, чтобы убедиться, что он есть
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-        throw new Error(userError?.message || 'User not authenticated. Cannot save puzzle.');
-    }
-
-    // Добавляем user_id к данным пазла
-    const dataWithUserId = {
-        ...puzzleDataToSave,
-        user_id: user.id
-    };
-
-    const { data, error } = await supabase
-        .from('puzzles')
-        .insert([dataWithUserId]) // insert ожидает массив объектов
-        .select(); // Возвращаем вставленные данные
-
-    if (error) {
-        console.error('Supabase error saving puzzle:', error);
-        throw error; // Пробрасываем ошибку для обработки в компоненте
-    }
-    return data ? data[0] : null; // Возвращаем первый (и единственный) вставленный пазл
+const normalizePuzzles = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.puzzles)) return data.puzzles;
+    return [];
 };
 
-// Новая функция для проверки дубликатов
-export const checkForDuplicatePuzzle = async (puzzleToSave) => {
+export const getPuzzles = async () => normalizePuzzles(await apiFetch('/api/puzzles'));
+
+export const createPuzzle = async (puzzleData) => apiFetch('/api/puzzles', {
+    method: 'POST',
+    body: puzzleData,
+});
+
+export const getPuzzle = async (puzzleId) =>
+    apiFetch(`/api/puzzles/${encodeURIComponent(puzzleId)}`);
+
+export const updatePuzzle = async (puzzleId, puzzleUpdateData) =>
+    apiFetch(`/api/puzzles/${encodeURIComponent(puzzleId)}`, {
+        method: 'PUT',
+        body: puzzleUpdateData,
+    });
+
+export const deletePuzzle = async (puzzleId) =>
+    apiFetch(`/api/puzzles/${encodeURIComponent(puzzleId)}`, { method: 'DELETE' });
+
+export const getPuzzleAnalytics = async (puzzleId) =>
+    apiFetch(`/api/puzzles/${encodeURIComponent(puzzleId)}/analytics`);
+
+export const getPublicPuzzle = async (shareId) =>
+    apiFetch(`/api/play/${encodeURIComponent(shareId)}`);
+
+export const submitAttempt = async (shareId, attempt) =>
+    apiFetch(`/api/play/${encodeURIComponent(shareId)}/attempt`, {
+        method: 'POST',
+        body: attempt,
+    });
+
+export const saveLtiConfiguration = async (resourceLinkId, generationParams) =>
+    apiFetch(`/api/lti/config/${encodeURIComponent(resourceLinkId)}`, {
+        method: 'PUT',
+        body: { generationParams },
+    });
+
+export const getLtiConfiguration = async (resourceLinkId) => {
     try {
-        const supabase = await getSupabaseClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) return false;
-
-        // Проверяем по имени и user_id
-        const { data: existingPuzzles, error } = await supabase
-            .from('puzzles')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('name', puzzleToSave.name);
-
-        if (error) throw error;
-
-        // Если нашли хотя бы одну головоломку с таким же именем
-        if (existingPuzzles && existingPuzzles.length > 0) {
-            return true;
-        }
-
-        return false;
+        const data = await apiFetch(`/api/lti/config/${encodeURIComponent(resourceLinkId)}`);
+        return data?.generation_params ?? data?.generationParams ?? data ?? null;
     } catch (error) {
-        console.error('Error checking for duplicate puzzle:', error);
-        return false; // В случае ошибки разрешаем сохранение
-    }
-};
-
-export const getUserPuzzlesFromSupabase = async () => {
-    const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        console.log('getUserPuzzlesFromSupabase: User not authenticated, returning empty array.');
-        return [];
-    }
-
-    console.log(`getUserPuzzlesFromSupabase: Fetching puzzles for user_id: ${user.id}`);
-
-    const { data, error } = await supabase
-        .from('puzzles')
-        .select('*')
-        .eq('user_id', user.id) // Фильтруем по user_id
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching user puzzles from Supabase:', error);
+        //"No configuration yet" is a normal state for a freshly created LTI placement.
+        if (error?.status === 404) return null;
         throw error;
     }
-
-    console.log('getUserPuzzlesFromSupabase: Fetched puzzles:', data);
-    return data || [];
-};
-
-export const getPuzzleByIdFromSupabase = async (puzzleId) => {
-    const supabase = await getSupabaseClient();
-    // RLS-политика также сработает здесь, пользователь сможет получить только свой пазл
-    const { data, error } = await supabase
-        .from('puzzles')
-        .select('*')
-        .eq('id', puzzleId)
-        .single(); // Ожидаем одну запись
-
-    if (error) {
-        console.error('Supabase error fetching puzzle by ID:', error);
-        // Если ошибка "PGRST116" (0 rows), значит пазл не найден или не принадлежит пользователю
-        if (error.code === 'PGRST116') {
-             throw new Error('Puzzle not found or access denied.');
-        }
-        throw error;
-    }
-    return data;
-};
-
-export const updatePuzzleTags = async (puzzleId, newTags) => {
-    const supabase = await getSupabaseClient();
-    try {
-        const { data, error } = await supabase
-            .from('puzzles')
-            .update({ tags: newTags })
-            .eq('id', puzzleId);
-        
-        if (error) throw error;
-        return data;
-    } catch (error) {
-        console.error('Error updating puzzle tags:', error);
-        throw error;
-    }
-};
-
-export const deletePuzzleFromSupabase = async (puzzleId) => {
-    const supabase = await getSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        throw new Error('Пользователь не авторизован');
-    }
-
-    const { error } = await supabase
-        .from('puzzles')
-        .delete()
-        .eq('id', puzzleId)
-
-    if (error) {
-        console.error('Error deleting puzzle from Supabase:', error);
-        throw error;
-    }
-
-    console.log(`Puzzle ${puzzleId} deleted successfully`);
-    return true;
 };
 
 export const fetchRegeneratedLayout = async (gameType, wordsAndClues) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recalculate-game-layout`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/recalculate-game-layout`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -161,17 +75,4 @@ export const fetchRegeneratedLayout = async (gameType, wordsAndClues) => {
         throw new Error(errorData.error || `Ошибка при перегенерации сетки: ${response.status}`);
     }
     return response.json();
-};
-
-export const updatePuzzleInSupabase = async (puzzleId, puzzleUpdateData) => {
-    const supabase = await getSupabaseClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) { throw new Error(userError?.message || 'Пользователь не авторизован.'); }
-    const { data, error } = await supabase
-        .from('puzzles')
-        .update(puzzleUpdateData)
-        .eq('id', puzzleId)
-        .select();
-    if (error) { console.error('Ошибка Supabase при обновлении пазла:', error); throw error; }
-    return data ? data[0] : null;
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import '../css/profile.css';
-import { getSupabaseClient } from '../config/supabaseClient';
+import { getMe, updateProfile as updateUserProfile, logout as logoutUser } from '../services/authService';
 import ProfileInfo from './ProfileInfo';
 import SavedPuzzles from './SavedPuzzles';
 import Preloader from '../assets/svg/Preloader';
@@ -25,37 +25,36 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
     const [newGender, setNewGender] = useState('');
 
     const getProfile = async () => {
-         try {
-                if (!user) {
-                    setError('Пользователь не авторизован');
-                    return;
-                }
-            const supabase = await getSupabaseClient();
-                 // Получаем актуальные данные пользователя из Supabase
-                const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-
-            if (userError) throw userError;
-            if (currentUser) {
-                    const username = currentUser.user_metadata?.username || 'Не указано';
-
-                    setUserData({
-                        email: currentUser.email,
-                        username: username,
-                        gender: currentUser.user_metadata?.gender || 'Не указано',
-                        occupation: currentUser.user_metadata?.occupation || 'Не указано'
-                    });
-                    setNewUsername(username);
-                    setNewOccupation(currentUser.user_metadata?.occupation || 'НЕ УКАЗАНО');
-                    setNewGender(currentUser.user_metadata?.gender || 'НЕ УКАЗАНО');
-                }
-
-        } catch (error) {
-             console.error('Error loading user data:', error);
-                setError('Ошибка при загрузке данных пользователя');
-        }
-          finally {
-                setIsLoading(false);
+        try {
+            if (!user) {
+                setError('Пользователь не авторизован');
+                return;
             }
+
+            const currentUser = await getMe();
+
+            if (currentUser) {
+                const metadata = currentUser.user_metadata || {};
+                const username = currentUser.username || metadata.username || 'Не указано';
+                const occupation = currentUser.occupation || metadata.occupation || 'Не указано';
+                const gender = currentUser.gender || metadata.gender || 'Не указано';
+
+                setUserData({
+                    email: currentUser.email || '',
+                    username,
+                    gender,
+                    occupation,
+                });
+                setNewUsername(username);
+                setNewOccupation(currentUser.occupation || metadata.occupation || 'НЕ УКАЗАНО');
+                setNewGender(currentUser.gender || metadata.gender || 'НЕ УКАЗАНО');
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            setError('Ошибка при загрузке данных пользователя');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -63,30 +62,22 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
     }, [user]);
 
     const updateProfile = async () => {
-       try {
-                const supabase = await getSupabaseClient();
-                
-                // Обновляем данные в Supabase
-                const { error } = await supabase.auth.updateUser({
-                    data: {
-                        username: newUsername,
-                        gender: newGender,
-                        occupation: newOccupation
-                    }
-                });
+        try {
+            const updatedUser = await updateUserProfile({
+                username: newUsername,
+                gender: newGender,
+                occupation: newOccupation,
+            });
 
-                if (error) throw error;
+            const metadata = updatedUser?.user_metadata || {};
+            setUserData(prevData => ({
+                ...prevData,
+                username: updatedUser?.username || metadata.username || newUsername,
+                gender: updatedUser?.gender || metadata.gender || newGender,
+                occupation: updatedUser?.occupation || metadata.occupation || newOccupation,
+            }));
 
-                // Обновляем локальное состояние
-                setUserData(prevData => ({
-                    ...prevData,
-                    username: newUsername,
-                    gender: newGender,
-                    occupation: newOccupation
-                }));
-
-                notifySuccess('Профиль успешно обновлен!');
-                
+            notifySuccess('Профиль успешно обновлен!');
         } catch (error) {
             console.error('Error updating profile:', error);
             notifyError('Произошла ошибка при обновлении профиля');
@@ -95,14 +86,11 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
 
     const logout = async () => {
         try {
-                const supabase = await getSupabaseClient();
-            const { error } = await supabase.auth.signOut();
-           if (error) throw error;
+            await logoutUser();
             navigate('/');
         } catch (error) {
-           console.error('Ошибка при выходе из системы:', error);
+            console.error('Ошибка при выходе из системы:', error);
             notifyError('Ошибка при выходе из системы');
-            // Если произошла ошибка с сессией, все равно перенаправляем
             setTimeout(() => navigate('/'), 2000);
         }
     };

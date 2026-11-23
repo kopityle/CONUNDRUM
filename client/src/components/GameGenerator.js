@@ -11,17 +11,19 @@ import useNotifications from '../hooks/useNotifications';
 import ActivityTracker from '../modules/ActivityTracker';
 import GameLogotype from '../assets/svg/GameLogotype';
 import {
-    savePuzzleToSupabase,
-    getPuzzleByIdFromSupabase,
-    checkForDuplicatePuzzle,
-    updatePuzzleInSupabase,
+    createPuzzle,
+    getPuzzle,
+    updatePuzzle,
     fetchRegeneratedLayout,
+    saveLtiConfiguration,
+    getLtiConfiguration,
 } from '../services/puzzleService';
-import { saveLtiConfiguration, getLtiConfiguration } from '../services/ltiConfigService';
+import ShareModal from './ShareModal';
+import AuthRequiredModal from './AuthRequiredModal';
 
 const GAME_TYPES = ['crossword', 'wordsoup', 'rebus'];
 
-const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiUserId }) => {
+const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) => {
     const navigate = useNavigate();
     const { notifications, notifyError, notifySuccess, dismissNotification } = useNotifications();
     const trackerRef = useRef(null);
@@ -31,7 +33,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
     const isLTI = urlParams.get('lti') === 'true';
     const isAuthenticated = !!user;
     const ltiContextId = useMemo(
-        () => ltiUserId || user?.user_metadata?.moodle_id || user?.ltiUserId || user?.lti_user_id,
+        () => ltiUserId
+            || user?.ltiUserId
+            || user?.lti_user_id
+            || user?.user_metadata?.moodle_id
+            || (user?.lti ? user.id : undefined),
         [ltiUserId, user]
     );
 
@@ -47,6 +53,9 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [originalPuzzleNameForEdit, setOriginalPuzzleNameForEdit] = useState('');
     const [gameVersion, setGameVersion] = useState(0);
+    const [currentShareId, setCurrentShareId] = useState(null);
+    const [shareTarget, setShareTarget] = useState(null);
+    const [isAuthRequiredOpen, setIsAuthRequiredOpen] = useState(false);
 
     const calculateScore = useCallback(() => {
         const stats = trackerRef.current.getStats();
@@ -133,7 +142,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
     const loadAndDisplayPuzzle = useCallback(async (puzzleId) => {
         setIsLoading(true);
         try {
-            const loadedPuzzle = await getPuzzleByIdFromSupabase(puzzleId);
+            const loadedPuzzle = await getPuzzle(puzzleId);
             if (!loadedPuzzle?.game_data || !loadedPuzzle.id) {
                 throw new Error('Пазл не найден');
             }
@@ -149,6 +158,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
             setCurrentGameData(nextGameData);
             setPuzzleNameForSave(loadedPuzzle.name || '');
             setCurrentPuzzleId(loadedPuzzle.id);
+            setCurrentShareId(loadedPuzzle.share_id || null);
             setOriginalPuzzleNameForEdit(loadedPuzzle.name || '');
             setIsFormCreatingPuzzle(false);
             setIsConfigureMode(true);
@@ -183,7 +193,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                 setIsFormCreatingPuzzle(false);
                 setIsConfigureMode(false);
                 setIsLoading(true);
-                getLtiConfiguration(supabase, resource)
+                getLtiConfiguration(resource)
                     .then((config) => {
                         if (config) generateGameFromConfig(config);
                         else {
@@ -209,7 +219,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
             setIsFormCreatingPuzzle(true);
             setIsConfigureMode(true);
         }
-    }, [generateGameFromConfig, isLTI, loadAndDisplayPuzzle, notifyError, supabase, urlParams, user]);
+    }, [generateGameFromConfig, isLTI, loadAndDisplayPuzzle, notifyError, urlParams, user]);
 
     useEffect(() => () => trackerRef.current.stopTracking(), []);
 
@@ -229,14 +239,14 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                 totalWords: Number(params.totalWords),
                 difficulty: params.difficulty || 'normal',
             };
-            await saveLtiConfiguration(supabase, resourceLinkId, generationParams);
+            await saveLtiConfiguration(resourceLinkId, generationParams);
             notifySuccess('Конфигурация для этого задания успешно сохранена!');
         } catch (error) {
             notifyError(`Ошибка сохранения: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
-    }, [notifyError, notifySuccess, resourceLinkId, supabase]);
+    }, [notifyError, notifySuccess, resourceLinkId]);
 
     const handleGenerateGame = useCallback(async (params) => {
         const { gameType, inputType, topic, text, totalWords, difficulty, file, puzzleName } = params;
@@ -323,18 +333,15 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
             name: puzzleNameForSave,
             game_type: currentGameData.gameType,
             game_data: currentGameData,
+            tags: [],
         };
 
         try {
-            if (await checkForDuplicatePuzzle(puzzleToSave)) {
-                notifyError('Такая головоломка уже существует!');
-                return;
-            }
-
-            const savedPuzzle = await savePuzzleToSupabase(puzzleToSave);
+            const savedPuzzle = await createPuzzle(puzzleToSave);
             if (savedPuzzle?.id) {
                 notifySuccess(`Игра "${savedPuzzle.name}" успешно сохранена!`);
                 setCurrentPuzzleId(savedPuzzle.id);
+                setCurrentShareId(savedPuzzle.share_id || null);
                 setOriginalPuzzleNameForEdit(savedPuzzle.name);
             } else {
                 notifyError('Не удалось сохранить игру или ID не был получен.');
@@ -453,10 +460,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                 };
 
             if (currentPuzzleId) {
-                await updatePuzzleInSupabase(currentPuzzleId, {
+                const updatedPuzzle = await updatePuzzle(currentPuzzleId, {
                     name: puzzleNameForSave,
                     game_data: updatedGameData,
                 });
+                if (updatedPuzzle?.share_id) setCurrentShareId(updatedPuzzle.share_id);
                 setCurrentGameData(updatedGameData);
                 setOriginalPuzzleNameForEdit(puzzleNameForSave);
                 notifySuccess(`Пазл "${puzzleNameForSave}" успешно обновлен!`);
@@ -468,16 +476,15 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                     name: puzzleNameForSave,
                     game_type: currentGameData.gameType,
                     game_data: updatedGameData,
+                    tags: [],
                 };
-                if (await checkForDuplicatePuzzle(puzzleToCreate)) {
-                    throw new Error('Пазл с таким именем уже существует!');
-                }
-                const newSavedPuzzle = await savePuzzleToSupabase(puzzleToCreate);
+                const newSavedPuzzle = await createPuzzle(puzzleToCreate);
                 if (!newSavedPuzzle?.id) {
                     throw new Error('Не удалось создать и сохранить новый пазл.');
                 }
                 setCurrentGameData(updatedGameData);
                 setCurrentPuzzleId(newSavedPuzzle.id);
+                setCurrentShareId(newSavedPuzzle.share_id || null);
                 setPuzzleNameForSave(newSavedPuzzle.name);
                 setOriginalPuzzleNameForEdit(newSavedPuzzle.name);
                 notifySuccess(`Новый пазл "${newSavedPuzzle.name}" успешно создан и сохранен!`);
@@ -504,6 +511,46 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
         puzzleNameForSave,
         startGameTracking,
     ]);
+
+    const handleShare = useCallback(async () => {
+        if (!currentGameData?.gameType) {
+            notifyError('Нет игры, которой можно поделиться.');
+            return;
+        }
+
+        try {
+            let shareId = currentShareId;
+            let name = puzzleNameForSave?.trim() || currentGameData.gameType;
+
+            if (!shareId) {
+                const createdPuzzle = await createPuzzle({
+                    name,
+                    game_type: currentGameData.gameType,
+                    game_data: currentGameData,
+                    tags: [],
+                });
+                shareId = createdPuzzle?.share_id;
+                if (!shareId) {
+                    throw new Error('Не удалось получить ссылку на игру.');
+                }
+                name = createdPuzzle.name || name;
+                setCurrentShareId(shareId);
+                if (createdPuzzle.id) setCurrentPuzzleId(createdPuzzle.id);
+            }
+
+            setShareTarget({ shareId, name });
+        } catch (error) {
+            notifyError(`Ошибка при создании ссылки: ${error.message || 'Неизвестная ошибка'}`);
+        }
+    }, [createPuzzle, currentGameData, currentShareId, notifyError, puzzleNameForSave]);
+
+    const handleSaveClick = useCallback(() => {
+        if (!isAuthenticated) {
+            setIsAuthRequiredOpen(true);
+            return;
+        }
+        handleActualSavePuzzle();
+    }, [handleActualSavePuzzle, isAuthenticated]);
 
     return (
         <>
@@ -539,6 +586,8 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                     isEditing={isEditing}
                     handleEnterEditMode={handleEnterEditMode}
                     handleActualSavePuzzle={handleActualSavePuzzle}
+                    onSave={handleSaveClick}
+                    handleShare={handleShare}
                     handleDownloadPdf={handleDownloadPdf}
                     isLoading={isLoading}
                     toggleFormCreatingPuzzle={() => setIsFormCreatingPuzzle((visible) => !visible)}
@@ -580,6 +629,28 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, supabase, ltiU
                     onComplete={handleComplete}
                 />
             </main>
+
+            {shareTarget && (
+                <ShareModal
+                    shareId={shareTarget.shareId}
+                    name={shareTarget.name}
+                    onClose={() => setShareTarget(null)}
+                />
+            )}
+
+            {isAuthRequiredOpen && (
+                <AuthRequiredModal
+                    onLogin={() => {
+                        setIsAuthRequiredOpen(false);
+                        navigate('/register');
+                    }}
+                    onCopyLink={() => {
+                        setIsAuthRequiredOpen(false);
+                        handleShare();
+                    }}
+                    onClose={() => setIsAuthRequiredOpen(false)}
+                />
+            )}
         </>
     );
 };

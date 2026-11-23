@@ -2,27 +2,44 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const jwt = require('jsonwebtoken');
-const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcryptjs');
 const { initializeLTI } = require('./middleware/ltiMiddleware');
 const { validateLTIRequest } = initializeLTI();
 const { sendGradeToMoodle } = require('./services/ltiService');
 const { generateGamePdf } = require('./services/pdfGeneratorService');
+const { initDatabase, getDatabase } = require('./db/database');
+const { createUserRepository } = require('./db/userRepository');
+const { issueToken } = require('./utils/authToken');
 const apiRoutes = require('./routes');
 
-const app = express();
-const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+initDatabase();
 
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS, methods: ['GET', 'POST'], credentials: true }));
+const app = express();
+
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 // Body parsers нужны глобально
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.set('trust proxy', 1);
 app.use(session({
-    secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true,
-    cookie: { secure: true, sameSite: 'none', httpOnly: true, maxAge: 86400000 }
+    secret: process.env.SESSION_SECRET || 'conundrum-dev-secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        httpOnly: true,
+        maxAge: 86400000
+    }
 }));
 
 // === ПОДКЛЮЧЕНИЕ ВСЕХ API РОУТОВ ОДНОЙ СТРОКОЙ ===
@@ -60,25 +77,45 @@ app.post('/api/generate-pdf', async (req, res) => {
 
 app.post('/lti/launch', validateLTIRequest, async (req, res) => {
     try {
-        const { userId, lis_person_contact_email_primary: email, lis_person_name_full: name, roles } = req.session;
-        const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-        let user = users.find(u => u.user_metadata.moodle_id === userId);
-        
-        if (!user) {
-            const { data } = await supabaseAdmin.auth.admin.createUser({
-                email, email_confirm: true, user_metadata: { full_name: name, moodle_id: userId, roles }
-            });
-            user = data.user;
-        }
-        
-        const token = jwt.sign({ sub: user.id, aud: 'authenticated' }, process.env.SUPABASE_JWT_SECRET, { expiresIn: '1h' });
-        const redirectUrl = new URL(process.env.CLIENT_URL + '/gamegenerator');
-        redirectUrl.searchParams.append('supabase_token', token);
+        const ltiSession = req.session || {};
+        const ltiUserId = ltiSession.userId;
+        if (!ltiUserId) return res.status(400).send('LTI Error: missing user id');
+
+        const email = ltiSession.lis_person_contact_email_primary || `lti-${ltiUserId}@local`;
+        const username = ltiSession.lis_person_name_full || `LTI ${ltiUserId}`;
+        const users = createUserRepository({ db: getDatabase() });
+        const user = users.upsertLtiUser({
+            email,
+            username,
+            password_hash: bcrypt.hashSync(crypto.randomBytes(24).toString('hex'), 10)
+        });
+
+        const resourceLinkId = ltiSession.resource_link_id || '';
+        const token = issueToken(user, {
+            lti: true,
+            ltiUserId,
+            resource_link_id: resourceLinkId
+        });
+
+        const redirectUrl = new URL((process.env.CLIENT_URL || 'http://localhost') + '/gamegenerator');
+        redirectUrl.searchParams.append('auth_token', token);
         redirectUrl.searchParams.append('lti', 'true');
-        redirectUrl.searchParams.append('mode', roles?.toLowerCase().includes('instructor') ? 'configure' : 'solve');
-        
+        redirectUrl.searchParams.append(
+            'mode',
+            String(ltiSession.roles || '').toLowerCase().includes('instructor') ? 'configure' : 'solve'
+        );
+        redirectUrl.searchParams.append('resource_link_id', resourceLinkId);
+
         res.redirect(redirectUrl.toString());
-    } catch (e) { console.error(e); res.status(500).send("LTI Error"); }
+    } catch (e) {
+        console.error(e);
+        res.status(500).send('LTI Error');
+    }
 });
 
-app.listen(process.env.PORT || 5000, () => console.log(`Server started`));
+module.exports = app;
+module.exports.app = app;
+
+if (require.main === module) {
+    app.listen(process.env.PORT || 5000, () => console.log('Server started'));
+}

@@ -17,8 +17,6 @@ services:
       context: ./client
       args:
         VITE_API_URL: ${VITE_API_URL}
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_BASE_URL: ${VITE_BASE_URL}
     container_name: conundrum-client
     ports:

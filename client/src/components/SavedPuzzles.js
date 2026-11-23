@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import '../css/saved-puzzles.css';
 import { useNavigate } from 'react-router-dom';
 import {
-    getUserPuzzlesFromSupabase,
-    updatePuzzleTags,
-    deletePuzzleFromSupabase,
+    getPuzzles,
+    updatePuzzle,
+    deletePuzzle,
+    getPuzzleAnalytics,
 } from '../services/puzzleService';
+import ShareModal from './ShareModal';
+import '../css/savedPuzzlesActions.css';
 import Preloader from '../assets/svg/Preloader';
 import PuzzleIcon from '../assets/svg/PuzzleIcon';
 import GameTypeIcon from '../assets/svg/GameTypeIcon';
@@ -28,6 +31,10 @@ const SavedPuzzles = () => {
     const [newTag, setNewTag] = useState('');
     const [puzzlesData, setPuzzlesData] = useState([]);
     const [puzzleToDelete, setPuzzleToDelete] = useState(null);
+    const [shareTarget, setShareTarget] = useState(null);
+    const [analyticsByPuzzle, setAnalyticsByPuzzle] = useState({});
+    const [expandedAnalyticsId, setExpandedAnalyticsId] = useState(null);
+    const [analyticsLoadingId, setAnalyticsLoadingId] = useState(null);
     const navigate = useNavigate();
     const { notifications, notifyError, dismissNotification } = useNotifications();
 
@@ -35,7 +42,7 @@ const SavedPuzzles = () => {
         const fetchPuzzles = async () => {
             try {
                 setIsLoading(true);
-                const userPuzzles = await getUserPuzzlesFromSupabase();
+                const userPuzzles = await getPuzzles();
                 const normalizedPuzzles = userPuzzles.map((puzzle) => ({
                     ...puzzle,
                     tags: puzzle.tags || [],
@@ -93,7 +100,7 @@ const SavedPuzzles = () => {
             const updatedTags = [...puzzle.tags];
             updatedTags.splice(tagIndex, 1);
             replacePuzzleTags(puzzleId, updatedTags);
-            await updatePuzzleTags(puzzleId, updatedTags);
+            await updatePuzzle(puzzleId, { tags: updatedTags });
         } catch (error) {
             notifyError('Не удалось удалить тег');
         }
@@ -122,7 +129,7 @@ const SavedPuzzles = () => {
             replacePuzzleTags(puzzleId, updatedTags);
             setEditingPuzzleIndex(null);
             setNewTag('');
-            await updatePuzzleTags(puzzleId, updatedTags);
+            await updatePuzzle(puzzleId, { tags: updatedTags });
         } catch (error) {
             notifyError('Не удалось добавить тег');
         }
@@ -135,7 +142,7 @@ const SavedPuzzles = () => {
     const confirmDeletePuzzle = async () => {
         if (!puzzleToDelete) return;
         try {
-            await deletePuzzleFromSupabase(puzzleToDelete.id);
+            await deletePuzzle(puzzleToDelete.id);
             const nextPuzzles = puzzlesData.filter((puzzle) => puzzle.id !== puzzleToDelete.id);
             setPuzzlesData(nextPuzzles);
             updateUniqueTags(nextPuzzles);
@@ -143,6 +150,55 @@ const SavedPuzzles = () => {
         } catch (error) {
             notifyError('Не удалось удалить головоломку');
         }
+    };
+
+    const handleShare = (puzzle) => {
+        if (!puzzle.share_id) {
+            notifyError('Ссылка для этой головоломки недоступна.');
+            return;
+        }
+        setShareTarget({ shareId: puzzle.share_id, name: puzzle.name });
+    };
+
+    const handleAnalytics = async (puzzle) => {
+        if (expandedAnalyticsId === puzzle.id) {
+            setExpandedAnalyticsId(null);
+            return;
+        }
+
+        setAnalyticsLoadingId(puzzle.id);
+        try {
+            const analytics = await getPuzzleAnalytics(puzzle.id);
+            setAnalyticsByPuzzle((prev) => ({ ...prev, [puzzle.id]: analytics || {} }));
+            setExpandedAnalyticsId(puzzle.id);
+        } catch (error) {
+            notifyError(error.message || 'Не удалось загрузить аналитику.');
+        } finally {
+            setAnalyticsLoadingId(null);
+        }
+    };
+
+    const renderAnalytics = (puzzle) => {
+        const analytics = analyticsByPuzzle[puzzle.id];
+        if (expandedAnalyticsId !== puzzle.id || !analytics) return null;
+
+        const average = Math.round((Number(analytics.averageScore) || 0) * 10) / 10;
+        return (
+            <div className='puzzle-analytics glass-surface' data-testid={`analytics-${puzzle.id}`}>
+                <p className='puzzle-analytics-title'>Аналитика: {puzzle.name}</p>
+                <p>Попыток: {analytics.attemptCount ?? 0}</p>
+                <p>Средний балл: {average}</p>
+                {analytics.uniqueStudents !== undefined && <p>Учеников: {analytics.uniqueStudents}</p>}
+                <p className='puzzle-analytics-words-title'>Сложные слова:</p>
+                {analytics.difficultWords?.length ? (
+                    <ul className='puzzle-analytics-words'>
+                        {analytics.difficultWords.map((item) => (
+                            <li key={item.word}>{item.word} — {item.count}</li>
+                        ))}
+                    </ul>
+                ) : <p>Нет данных</p>}
+            </div>
+        );
     };
 
     return (
@@ -248,6 +304,26 @@ const SavedPuzzles = () => {
                                                 </li>
                                             )}
                                         </ul>
+                                        <div className='puzzle-action-buttons'>
+                                            <button
+                                                type='button'
+                                                className='puzzle-action-button'
+                                                title='Поделиться'
+                                                onClick={() => handleShare(puzzle)}
+                                            >
+                                                Поделиться
+                                            </button>
+                                            <button
+                                                type='button'
+                                                className='puzzle-action-button'
+                                                title='Аналитика'
+                                                onClick={() => handleAnalytics(puzzle)}
+                                                disabled={analyticsLoadingId === puzzle.id}
+                                            >
+                                                {analyticsLoadingId === puzzle.id ? 'Загрузка...' : 'Аналитика'}
+                                            </button>
+                                        </div>
+                                        {renderAnalytics(puzzle)}
                                     </li>
                                 ))}
                             </ul>
@@ -281,6 +357,14 @@ const SavedPuzzles = () => {
                     </div>
                 </section>
             </div>
+
+            {shareTarget && (
+                <ShareModal
+                    shareId={shareTarget.shareId}
+                    name={shareTarget.name}
+                    onClose={() => setShareTarget(null)}
+                />
+            )}
         </section>
     );
 };

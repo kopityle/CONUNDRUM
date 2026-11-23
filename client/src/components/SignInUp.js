@@ -3,7 +3,7 @@ import SignUpField from './SignUpField';
 import SignInField from './SignInField';
 import '../css/signInUp.css';
 
-const SignInUp = ({ supabase }) => {
+const SignInUp = () => {
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const [isRegistrationProcess, setIsRegistrationProcess] = React.useState(true);
 
@@ -24,14 +24,12 @@ const SignInUp = ({ supabase }) => {
           isPasswordVisible={isPasswordVisible}
           togglePasswordVisibility={togglePasswordVisibility}
           switchLoginProcess={switchLoginProcess}
-          supabase={supabase}
         />
       ) : (
         <SignInField
           isPasswordVisible={isPasswordVisible}
           togglePasswordVisibility={togglePasswordVisibility}
           switchLoginProcess={switchLoginProcess}
-          supabase={supabase}
         />
       )}
     </main>

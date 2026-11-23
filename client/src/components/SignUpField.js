@@ -4,8 +4,9 @@ import '../css/signUpField.css';
 import EyeIcon from '../assets/svg/EyeIcon';
 import ArrowLeftIcon from '../assets/svg/ArrowLeftIcon';
 import { OCCUPATIONS, GENDERS } from '../constants/profileOptions';
+import { register } from '../services/authService';
 
-const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginProcess, supabase }) => {
+const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginProcess }) => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,10 +22,6 @@ const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        if (!supabase) {
-            setMessage('Ошибка инициализации. Попробуйте позже.');
-            return;
-        }
 
         if (!username || !email || !password || !gender || !occupation) {
             setMessage('Пожалуйста, заполните все поля');
@@ -33,32 +30,21 @@ const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
 
         setIsLoading(true);
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const { user } = await register({
                 email,
                 password,
-                options: {
-                    data: {
-                        username,
-                        gender,
-                        occupation
-                    }
-                }
+                username,
+                gender,
+                occupation,
             });
 
-            if (error) {
-                setMessage(error.message);
-                throw error;
-            }
-
-            if (data?.user) {
-                setMessage('Регистрация успешна! Проверьте вашу почту для подтверждения.');
-                setTimeout(() => {
-                    switchLoginProcess();
-                }, 3000);
+            if (user) {
+                setMessage('Регистрация успешна!');
+                navigate('/account');
             }
         } catch (error) {
             console.error('Registration error:', error);
-            setMessage(error.message);
+            setMessage(error.message || 'Ошибка регистрации');
         } finally {
             setIsLoading(false);
         }

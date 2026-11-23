@@ -13,6 +13,9 @@
 /client/build
 /client/dist
 
+# local SQLite database
+/server/data/
+
 # misc
 .DS_Store
 # environment variables

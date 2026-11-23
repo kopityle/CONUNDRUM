@@ -1,0 +1,50 @@
+.puzzle-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.puzzle-action-button {
+    flex: 1;
+    min-width: 110px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    background: rgba(251, 251, 254, 0.16);
+    color: #FBFBFE;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.puzzle-action-button:hover:not(:disabled) {
+    background: rgba(81, 56, 136, 0.85);
+}
+
+.puzzle-action-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.puzzle-analytics {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(47, 45, 56, 0.65);
+    font-size: 15px;
+}
+
+.puzzle-analytics-title {
+    font-weight: 600;
+}
+
+.puzzle-analytics-words-title {
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+.puzzle-analytics-words {
+    margin: 4px 0 0 18px;
+    list-style: disc;
+}

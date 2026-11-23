@@ -1,0 +1,142 @@
+.shared-game-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(47, 45, 56, 0.65);
+}
+
+.shared-game-modal {
+    position: relative;
+    width: min(460px, 100%);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 28px 24px;
+    border-radius: 15px;
+    background: rgba(47, 45, 56, 0.92);
+    color: #FBFBFE;
+    text-align: center;
+}
+
+.shared-game-modal h2 {
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.shared-game-name {
+    margin-top: 4px;
+    font-size: 16px;
+    opacity: 0.85;
+}
+
+.shared-game-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(251, 251, 254, 0.15);
+    color: #FBFBFE;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.shared-game-close:hover {
+    background: #ED7E98;
+    color: #2F2D38;
+}
+
+.shared-game-qr {
+    display: flex;
+    justify-content: center;
+    margin: 18px auto;
+    padding: 12px;
+    width: fit-content;
+    border-radius: 12px;
+    background: #FBFBFE;
+}
+
+.shared-game-link-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 16px;
+    text-align: left;
+}
+
+.shared-game-link-row {
+    display: flex;
+    gap: 8px;
+}
+
+.shared-game-link {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(251, 251, 254, 0.92);
+    color: #2F2D38;
+    font-size: 14px;
+}
+
+.shared-game-copy-button,
+.auth-required-login-button,
+.auth-required-copy-button {
+    flex: none;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #ED7E98;
+    color: #2F2D38;
+    font-size: 15px;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.shared-game-copy-button:hover,
+.auth-required-login-button:hover,
+.auth-required-copy-button:hover {
+    filter: brightness(1.1);
+}
+
+.shared-game-copy-error {
+    margin-top: 8px;
+    color: #FFD7DE;
+    font-size: 14px;
+}
+
+.shared-game-hint {
+    margin-top: 14px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.auth-required-modal {
+    width: min(420px, 100%);
+}
+
+.auth-required-text {
+    margin: 16px 0 22px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.auth-required-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.auth-required-copy-button {
+    background: rgba(251, 251, 254, 0.92);
+    color: #2F2D38;
+}

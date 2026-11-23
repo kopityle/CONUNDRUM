@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSupabaseClient } from '../config/supabaseClient';
+import { login } from '../services/authService';
 import '../css/signInField.css';
 import EyeIcon from '../assets/svg/EyeIcon';
 import ArrowLeftIcon from '../assets/svg/ArrowLeftIcon';
@@ -9,29 +9,24 @@ const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
-            const supabase = await getSupabaseClient();
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            const { user } = await login({ email, password });
 
-            if (error) {
-                setMessage(error.message);
-                return;
-            }
-
-            if (data?.user) {
+            if (user) {
                 setMessage('Вход успешен!');
                 navigate('/account');
             }
         } catch (error) {
-            setMessage('Ошибка входа');
+            setMessage(error.message || 'Ошибка входа');
             console.error('Login error:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -58,6 +53,7 @@ const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
                         />
                         <div className='reg-input-password-div'>
                             <input 
@@ -67,6 +63,7 @@ const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                                 required 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
                             />
                             <EyeIcon isVisible={isPasswordVisible} onClick={togglePasswordVisibility} />
                         </div>
@@ -80,8 +77,9 @@ const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                         <button 
                             type='submit' 
                             className='create-account-button'
+                            disabled={isLoading}
                         >
-                            Войти
+                            {isLoading ? 'Вход...' : 'Войти'}
                         </button>
                     </div>
                 </form>

@@ -6,6 +6,7 @@ import DownloadPdf from "../assets/svg/DownloadPdf";
 import HomeIcon from "../assets/svg/HomeIcon";
 import ProfileIcon from "../assets/svg/ProfileIcon";
 import EditIcon from "../assets/svg/EditIcon";
+import ShareIcon from "../assets/svg/ShareIcon";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 
@@ -15,11 +16,12 @@ const GameMenu = ({
     isBlackTheme, 
     toggleTheme, 
     isLTI,
-    isAuthenticated,
     isCurrentGameData,
     isEditing,
     handleEnterEditMode,
     handleActualSavePuzzle,
+    onSave,
+    handleShare,
     handleDownloadPdf,
     isLoading,
     toggleFormCreatingPuzzle,
@@ -32,6 +34,7 @@ const GameMenu = ({
     const navToProfile = () => navigate('/account');
 
     const profileOnClick = isAuth ? navToProfile : navToRegister;
+    const saveGame = onSave || handleActualSavePuzzle;
 
     return (
         <section className={`game-menu-sidebar ${open ? "open" : "closed"}`}>
@@ -62,9 +65,9 @@ const GameMenu = ({
                 </button>
                 <ThemeChanger isBlackTheme={isBlackTheme} toggleTheme={toggleTheme}/>
                 
-                {!isLTI && isAuthenticated && isCurrentGameData && !isEditing && (
+                {isCurrentGameData && !isEditing && (
                     <>
-                    {isCurrentGameData && isCurrentGameData.gameType !== 'rebus' && (
+                    {isCurrentGameData.gameType !== 'rebus' && (
                         <button
                             onClick={handleEnterEditMode}
                             className="game-action-button edit-puzzle-button"
@@ -75,7 +78,7 @@ const GameMenu = ({
                         </button>
                     )}
                         <button
-                            onClick={handleActualSavePuzzle}
+                            onClick={saveGame}
                             className="game-action-button save-puzzle-button"
                             title='Сохранить в свои головоломки'
                             disabled={isLoading}
@@ -90,12 +93,20 @@ const GameMenu = ({
                         >
                             <DownloadPdf />
                         </button>
+                        <button
+                            onClick={handleShare}
+                            className="game-action-button share-game-button"
+                            title='Поделиться с классом'
+                            disabled={isLoading}
+                        >
+                            <ShareIcon />
+                        </button>
                     </>
                 )}
                 
             </div>
         </section>
     );
-}
+};
 
 export default GameMenu;
