@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: %VITE_BASE_URL%/sitemap.xml

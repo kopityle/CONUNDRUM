@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+#game-about-popup {
+    background: rgba(81, 56, 136, 0.8);
+}
+
+.about-popup {
+    position: absolute;
+    box-sizing: border-box;
+    left: 50%;
+    top: 0;
+    padding: 56px 12px 12px 12px;
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.3s ease;
+}
+
+.about-popup.visible {
+    opacity: 1;
+    visibility: visible;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.about-popup.hidden {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, 0);
+    }
+}
+
+.about-popup-div {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border-radius: 9px;
+    width: 1200px;
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 2px solid;
+}
+
+.about-popup-div .logotype {
+    display: block;
+    margin-top: 20px;
+    width: 460px;
+}
+
+.about-popup-paragraphs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: justify;
+}
+
+.about-popup-paragraphs h3, .about-popup-paragraphs p {
+    font-size: 20px;
+}
+
+.about-popup-paragraphs h3 {
+    font-weight: 600;
+    font-size: 22px;
+    text-decoration: underline;
+    text-underline-offset: 10px;
+}
+
+
+@media (max-width: 820px) {
+    .about-popup {
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 50px 8px 8px 8px;
+        border-radius: 10px;
+        width: 100%;
+        transition: none;
+    }
+    
+    .about-popup.visible {
+        animation: none;
+    }
+    
+    .about-popup.hidden {
+        animation: none;
+    }
+
+    .about-popup-div {
+        padding: 10px;
+        border-radius: 10px;
+        width: calc(100% - 20px);
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    .about-popup-div .site-logo {
+        width: 201px;
+        height: 24px;
+        overflow: visible;
+    }
+
+    .about-popup-div .logotype {
+        margin-top: 16px;
+        width: 198px;
+        height: 41px;
+        overflow: visible;
+    }
+
+    .about-popup-paragraphs {
+        text-align: justify;
+        font-size: 14px;
+        gap: 8px;
+        margin-top: 8px;
+        line-height: 1.5;
+    }
+
+    .about-popup-text h3 {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .about-popup-text .paragraph {
+        margin-top: 8px;
+    }
+}

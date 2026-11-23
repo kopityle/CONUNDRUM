@@ -1,0 +1,46 @@
+# Локфайлы зависимостей (съедают десятки тысяч токенов без пользы)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Сборки, кэши и артефакты (включая новый Vite dist/)
+dist/
+build/
+.vite/
+.cache/
+coverage/
+.nyc_output/
+
+# Результаты самого repomix, чтобы не упаковать прошлый дамп
+repomix-output.*
+
+# Секреты и окружение
+.env
+.env.*
+!.env.example
+
+# Логи и временные файлы
+*.log
+npm-debug.log*
+.DS_Store
+
+# Медиа, шрифты и бинарники
+*.mp4
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.ico
+*.woff
+*.woff2
+*.ttf
+*.pdf
+
+# Локальные файлы БД (если будешь использовать SQLite)
+*.sqlite
+*.sqlite3
+*.db
+
+# Конфиги IDE
+.vscode/
+.idea/

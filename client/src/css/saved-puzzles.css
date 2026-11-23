@@ -1,0 +1,500 @@
+.user-saved-games-and-tags {
+    position: relative;
+    width: 1200px;
+    height: 100%;
+}
+
+.saved-games-and-tags {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    min-height: 0;
+}
+
+.user-saved-games {
+    position: relative;
+    flex: 1;
+    overflow-y: auto;
+    background: rgba(237, 126, 152, 1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    height: 100%;
+    min-width: 700px;
+    scrollbar-width: none;
+}
+
+.user-saved-games::-webkit-scrollbar {
+    display: none;
+}
+
+.saved-games-list {
+    margin: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    list-style: none;
+    width: calc(100% - 20px);
+}
+
+.saved-games-item {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 20px;
+    width: 100%;
+    overflow: hidden;
+    transition: 
+        background-color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.saved-games-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.saved-games-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+.saved-games-item:hover {
+    background-color: rgba(81, 56, 136, 0.6);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(81, 56, 136, 0.5);
+
+    .puzzle-delete-button {
+        display: flex;
+    }
+}
+
+.puzzle-delete-button {
+    display: none;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    background: #FBFBFE;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1.5;
+    color: #2F2D38;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.saved-game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.saved-game-info div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.saved-game-info div svg {
+    display: block;
+    height: 1.1em;
+}
+
+
+.saved-games-tags {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.saved-games-tags li {
+    position: relative;
+    padding: 2px 8px;
+    border-radius: 15px;
+    line-height: 1.5;
+}
+
+.saved-games-tags .add-new-tag-button {
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-new-tag-button {
+    transition: transform 0.2s ease;
+}
+
+.add-new-tag-button:hover {
+    transform: rotate(15deg);
+}
+
+.games-tag-item:hover .tag-remove {
+    display: flex;
+}
+
+.tag-remove {
+    display: none;
+    position: absolute;
+    right: -7px;
+    top: -7px;
+    background: #ED7E98;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1.5;
+    color: #FBFBFE;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.tag-input-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    width: 100%;
+}
+
+.new-tag-input {
+    background: transparent;
+    border: none;
+    color: #FBFBFE;
+    font-size: 20px;
+    line-height: 1.5;
+    width: 80%;
+}
+
+.tag-save-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    display: flex;
+    background: #62E953;
+    border: none;
+    border-radius: 5px;
+    height: calc(100% - 4px);
+    aspect-ratio: 1;
+    color: #FBFBFE;
+    font-size: 20px;
+}
+
+.new-tag-input:focus {
+    outline: none;
+}
+
+.user-tags {
+    flex: 0 0 1; 
+    background: rgba(237, 126, 152, 1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 0 2px 1px rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    height: 100%;
+}
+
+
+.user-tags-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 10px;
+    height: calc(100% - 20px);
+}
+
+.user-tags-content h2 {
+    font-size: 22px;
+    text-transform: uppercase;
+}
+
+.search-tags-input {
+    display: flex;
+    border-radius: 15px;
+    padding: 6px 12px;
+    font-size: 20px;
+    width: calc(95% - 24px);
+    position: relative;
+    overflow: hidden;
+}
+
+.search-tags-input::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.search-tags-input::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+.search-tags-input:focus {
+    outline: none;
+}
+
+.user-tags-list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    gap: 5px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    width: 95%;
+}
+
+.user-tags-list::-webkit-scrollbar {
+    display: none;
+}
+
+.user-tags-item {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: justify;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 20px;
+    cursor: pointer;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.user-tags-item.selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.user-tags-item.selected::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
+}
+
+
+
+@media (max-width: 1400px) and (min-width: 821px) {
+    .user-saved-games-and-tags {
+        width: 100%;
+    }
+
+    .user-saved-games {
+        min-width: auto;
+    }
+
+    .saved-games-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 820px) and (min-width: 550px) {
+    .user-saved-games-and-tags {
+        width: 100%;
+        min-height: 1000px;
+    }
+
+    .saved-games-and-tags {
+        flex-direction: column;
+        gap: 15px;
+        height: 100%;
+    }
+
+    .user-saved-games {
+        min-width: auto;
+        height: 50%;
+        flex: none;
+        overflow-y: auto;
+    }
+
+    .user-tags {
+        height: 50%;
+        flex: none;
+    }
+
+    .saved-games-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .user-tags-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-tags-list {
+        flex-grow: 1;
+        max-height: none;
+    }
+}
+
+@media (max-width: 549px) {
+    .user-saved-games-and-tags {
+        width: 100%;
+        min-height: 1000px;
+    }
+
+    .saved-games-and-tags {
+        flex-direction: column;
+        gap: 15px;
+        height: 100%;
+    }
+
+    .user-saved-games {
+        min-width: auto;
+        height: 50%;
+        flex: none;
+        overflow-y: auto;
+    }
+
+    .saved-games-item {
+        font-size: 18px;
+    }
+
+    .puzzle-delete-button {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .saved-games-tags li {
+        font-size: 16px;
+    }
+
+    .tag-remove {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .new-tag-input {
+        font-size: 18px;
+    }
+
+    .tag-save-button {
+        font-size: 18px;
+    }
+
+    .user-tags {
+        height: 50%;
+        flex: none;
+    }
+
+    .user-tags-content h2 {
+        font-size: 20px;
+    }
+
+    .search-tags-input {
+        font-size: 18px;
+    }
+
+
+    .saved-games-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .user-tags-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-tags-list {
+        flex-grow: 1;
+        max-height: none;
+    }
+
+    .user-tags-item {
+        font-size: 18px;
+    }
+}

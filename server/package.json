@@ -1,0 +1,35 @@
+{
+    "dependencies": {
+        "@supabase/supabase-js": "^2.46.2",
+        "body-parser": "^1.20.3",
+        "cors": "^2.8.5",
+        "crossword-layout-generator": "^0.1.1",
+        "docx-parser": "^0.2.1",
+        "dotenv": "^16.5.0",
+        "express": "^4.21.1",
+        "express-session": "^1.18.1",
+        "jsonrepair": "^3.13.1",
+        "jsonwebtoken": "^9.0.2",
+        "multer": "^1.4.5-lts.1",
+        "oauth": "^0.10.2",
+        "path": "^0.12.7",
+        "pdf-parse": "^1.1.1",
+        "pdfkit": "^0.17.1",
+        "supabase": "^1.223.10"
+    },
+    "name": "server",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "test": "jest",
+        "start": "node server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "type": "commonjs",
+    "devDependencies": {
+        "jest": "^30.2.0"
+    }
+}
