@@ -1,20 +1,53 @@
+/**
+ * Лимитер запросов с раздельными квотами по ключу (обычно — IP клиента).
+ * Старые записи удаляются при каждом обращении, поэтому Map не растёт бесконечно.
+ */
 class RateLimiter {
     constructor(limit = 20, interval = 60000) {
         this.limit = limit;
         this.interval = interval;
-        this.requests = [];
+        this.clients = new Map();
     }
 
-    tryConsume() {
+    tryConsume(key = 'default') {
+        const clientKey = key || 'unknown';
         const now = Date.now();
-        // Удаляем старые записи
-        this.requests = this.requests.filter(time => now - time < this.interval);
+        this.prune(now);
 
-        if (this.requests.length < this.limit) {
-            this.requests.push(now);
-            return true;
+        const recent = (this.clients.get(clientKey) || []).filter(
+            (time) => now - time < this.interval
+        );
+
+        if (recent.length >= this.limit) {
+            this.clients.set(clientKey, recent);
+            return false;
         }
-        return false;
+
+        recent.push(now);
+        this.clients.set(clientKey, recent);
+        return true;
+    }
+
+    /** Удаляет истёкшие отметки и полностью пустые записи клиентов. */
+    prune(now = Date.now()) {
+        for (const [key, timestamps] of this.clients) {
+            const recent = timestamps.filter((time) => now - time < this.interval);
+            if (recent.length === 0) {
+                this.clients.delete(key);
+            } else {
+                this.clients.set(key, recent);
+            }
+        }
+    }
+
+    get size() {
+        this.prune();
+        return this.clients.size;
+    }
+
+    reset() {
+        this.clients.clear();
     }
 }
+
 module.exports = RateLimiter;

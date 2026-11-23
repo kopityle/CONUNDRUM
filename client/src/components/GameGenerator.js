@@ -826,7 +826,7 @@ class GameGenerator extends Component {
         }
 
         // === Ограничение размера ===
-        const MAX_SIZE_MB = 30;
+        const MAX_SIZE_MB = 10;
         const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
         if (file.size > MAX_SIZE_BYTES) {
