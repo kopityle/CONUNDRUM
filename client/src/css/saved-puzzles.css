@@ -231,7 +231,7 @@
 }
 
 .user-tags {
-    flex: 0 0 1; 
+    flex: 0 1 auto;
     background: rgba(237, 126, 152, 1);
     border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(20px);
@@ -324,7 +324,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: justify;
+    justify-content: flex-start;
     padding: 3px 10px;
     border-radius: 15px;
     font-size: 20px;
@@ -497,4 +497,46 @@
     .user-tags-item {
         font-size: 18px;
     }
+}
+
+.delete-confirmation {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(47, 45, 56, 0.55);
+}
+
+.delete-confirmation-content {
+    width: min(420px, calc(100vw - 32px));
+    padding: 24px;
+    border-radius: 15px;
+    background: rgba(47, 45, 56, 0.95);
+    color: #FBFBFE;
+    font-size: 18px;
+    text-align: center;
+}
+
+.delete-confirmation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.delete-confirmation-buttons button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(251, 251, 254, 0.9);
+    color: #2F2D38;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.delete-confirmation-buttons button:last-child {
+    background: #ED7E98;
+    color: #2F2D38;
 }

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSupabaseClient } from '../config/supabaseClient';
 import '../css/signInField.css';
+import EyeIcon from '../assets/svg/EyeIcon';
+import ArrowLeftIcon from '../assets/svg/ArrowLeftIcon';
 
 const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginProcess }) => {
     const [email, setEmail] = useState('');
@@ -66,33 +68,13 @@ const SignInField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
-                            <svg 
-                                className={isPasswordVisible ? 'eye-open' : 'eye-closed'}
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none" 
-                                stroke-width="2" 
-                                color="#000"
-                                onClick={togglePasswordVisibility}>
-                                {isPasswordVisible ? (
-                                    <>
-                                        <path stroke="#2F2D38"  stroke-linecap="round" stroke-linejoin="round" d="M3 13c3.6-8 14.4-8 18 0"/>
-                                        <path stroke="#2F2D38"  stroke-linecap="round" stroke-linejoin="round" d="M12 17a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
-                                    </>
-                                ) : (
-                                    <path stroke="#2F2D38"  stroke-linecap="round" stroke-linejoin="round" d="m19.5 16-2.475-3.396M12 17.5V14M4.5 
-                                        16l2.469-3.388M3 8c3.6 8 14.4 8 18 0"/>
-                                )}
-                            </svg>
+                            <EyeIcon isVisible={isPasswordVisible} onClick={togglePasswordVisibility} />
                         </div>
                     </div>
                     {message && <p className='create-account-message'>{message}</p>}
                     <div className='create-and-exit-buttons'>
                         <button className='back-to-main-page-button' onClick={goToMainPage}>
-                            <svg  className='back-to-main-page' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-                                <path stroke="#FBFBFE" strokeLinecap="round" strokeLinejoin="round" 
-                                    strokeWidth="4" d="M25 30 15 20l10-10"/>
-                            </svg>
+                            <ArrowLeftIcon />
                             На главную
                         </button>
                         <button 

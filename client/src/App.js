@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainPage from './components/MainPage';
 import SignInUp from './components/SignInUp';
@@ -15,6 +15,10 @@ const AppContent = () => {
     const [user, setUser] = useState(null);
     const [supabaseInstance, setSupabaseInstance] = useState(null);
 
+    const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
+    const isLTI = searchParams.get('lti') === 'true';
+    const ltiUserId = searchParams.get('user_id') || searchParams.get('lti_user_id') || undefined;
+
     const toggleTheme = () => {
         setIsBlackTheme(prev => {
             const newValue = !prev;
@@ -27,8 +31,6 @@ const AppContent = () => {
 
     useEffect(() => {
         let mounted = true;
-        const urlParams = new URLSearchParams(window.location.search);
-        const isLTI = urlParams.has('lti');
 
         const handleAuth = async () => {
             console.log("App.js: Starting auth process...");
@@ -37,7 +39,7 @@ const AppContent = () => {
                 if (!mounted) return;
                 setSupabaseInstance(supabase);
 
-                const supabaseToken = urlParams.get('supabase_token');
+                const supabaseToken = searchParams.get('supabase_token');
 
                 if (isLTI && supabaseToken) {
                     console.log("App.js: LTI mode detected. Setting session from token...");
@@ -71,13 +73,12 @@ const AppContent = () => {
         handleAuth();
 
         return () => { mounted = false; };
-    }, []);
+    }, [isLTI, searchParams]);
 
     if (isLoading) {
         return <div className="loading">Загрузка...</div>;
     }
 
-    const isLTI = window.location.search.includes('lti=true');
     if (isLTI) {
         return (
             <div className={isBlackTheme ? 'black-theme' : 'white-theme'}>
@@ -87,6 +88,7 @@ const AppContent = () => {
                     user={user}
                     isAuth={!!user}
                     supabase={supabaseInstance}
+                    ltiUserId={ltiUserId}
                 />
             </div>
         );

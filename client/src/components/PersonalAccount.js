@@ -6,10 +6,13 @@ import { getSupabaseClient } from '../config/supabaseClient';
 import ProfileInfo from './ProfileInfo';
 import SavedPuzzles from './SavedPuzzles';
 import Preloader from '../assets/svg/Preloader';
+import NotificationBanner from './NotificationBanner';
+import useNotifications from '../hooks/useNotifications';
 
 const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
+    const { notifications, notifyError, notifySuccess, dismissNotification } = useNotifications();
     const [userData, setUserData] = useState({
         username: '',
         email: '',
@@ -82,12 +85,11 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
                     occupation: newOccupation
                 }));
 
-                alert('Профиль успешно обновлен!');
+                notifySuccess('Профиль успешно обновлен!');
                 
         } catch (error) {
             console.error('Error updating profile:', error);
-            setError('Ошибка при обновлении данных');
-            alert('Произошла ошибка при обновлении профиля');
+            notifyError('Произошла ошибка при обновлении профиля');
         }
     };
 
@@ -99,7 +101,7 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
             navigate('/');
         } catch (error) {
            console.error('Ошибка при выходе из системы:', error);
-            setError('Ошибка при выходе из системы');
+            notifyError('Ошибка при выходе из системы');
             // Если произошла ошибка с сессией, все равно перенаправляем
             setTimeout(() => navigate('/'), 2000);
         }
@@ -111,6 +113,7 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
 
     return (
         <>
+            <NotificationBanner notifications={notifications} onDismiss={dismissNotification} />
             <Header isBlackTheme={isBlackTheme} toggleTheme={toggleTheme} isAuth={true}/>
             <main className='personal-account-main '>
                 <div className="background-video-main red"/>

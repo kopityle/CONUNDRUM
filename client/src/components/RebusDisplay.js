@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import '../css/RebusDisplay.css';
 
-const RebusDisplay = ({ gameData, onAttempt }) => {
-    if (!gameData || !gameData.rebuses) return null;
+const RebusDisplay = ({ gameData, onAttempt, onComplete }) => {
+    const [solvedWords, setSolvedWords] = useState([]);
+    const completedRef = useRef(false);
+    const rebuses = gameData?.rebuses;
+
+    const handleAttempt = useCallback((isCorrect, word) => {
+        onAttempt?.(isCorrect, word);
+        if (!isCorrect) return;
+
+        setSolvedWords((prev) => {
+            if (prev.includes(word)) return prev;
+            const next = [...prev, word];
+            if (next.length === rebuses.length && !completedRef.current) {
+                completedRef.current = true;
+                onComplete?.();
+            }
+            return next;
+        });
+    }, [onAttempt, onComplete, rebuses?.length]);
+
+    if (!rebuses) return null;
     return (
         <div className="rebus-game-container">
             <h2>Ребусы</h2>
             <div className="rebuses-list">
-                {gameData.rebuses.map((rebus, index) => (
-                    <RebusCard key={index} rebus={rebus} index={index} onAttempt={onAttempt} />
+                {rebuses.map((rebus, index) => (
+                    <RebusCard key={index} rebus={rebus} index={index} onAttempt={handleAttempt} />
                 ))}
             </div>
         </div>
@@ -22,7 +41,7 @@ const RebusCard = ({ rebus, index, onAttempt }) => {
 
     const handleCheck = () => {
         const isCorrect = userAnswer.trim().toLowerCase() === rebus.word.toLowerCase();
-        if (onAttempt) onAttempt(isCorrect);
+        if (onAttempt) onAttempt(isCorrect, rebus.word);
 
         if (isCorrect) {
             setStatus('correct');

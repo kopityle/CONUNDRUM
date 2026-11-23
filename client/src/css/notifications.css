@@ -1,0 +1,63 @@
+.notification-stack {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(380px, calc(100vw - 32px));
+}
+
+.notification-banner.glass-surface {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(47, 45, 56, 0.92);
+    color: #FBFBFE;
+    font-size: 16px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.notification-banner.glass-surface.success {
+    border-color: rgba(98, 233, 83, 0.7);
+}
+
+.notification-banner.glass-surface.error {
+    border-color: rgba(237, 126, 152, 0.7);
+}
+
+.notification-message {
+    flex: 1;
+}
+
+.notification-close {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    color: inherit;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.notification-close:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+@media (max-width: 600px) {
+    .notification-stack {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+}

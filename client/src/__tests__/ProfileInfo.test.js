@@ -25,6 +25,9 @@ describe('ProfileInfo Component', () => {
                 newUsername={mockUserData.username} // Эмуляция стейта
                 newOccupation={mockUserData.occupation}
                 newGender={mockUserData.gender}
+                onUsernameChange={() => {}}
+                onOccupationChange={() => {}}
+                onGenderChange={() => {}}
                 onUpdateProfile={mockUpdate}
                 onLogout={mockLogout}
             />

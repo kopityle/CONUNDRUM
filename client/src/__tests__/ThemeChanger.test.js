@@ -1,39 +1,32 @@
 import { vi } from 'vitest';
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ThemeChanger from '../components/ThemeChanger';
 
 describe('ThemeChanger Component', () => {
-    
-    test('вызывает функцию toggleTheme при клике', () => {
-        const mockToggle = vi.fn(); // Шпион (mock function)
-        
-        // Рендерим в черной теме
-        const { container } = render(
-            <ThemeChanger isBlackTheme={true} toggleTheme={mockToggle} />
-        );
+    test('calls toggleTheme when the button is clicked', () => {
+        const mockToggle = vi.fn();
+        render(<ThemeChanger isBlackTheme={true} toggleTheme={mockToggle} />);
 
-        // Ищем SVG иконку (солнце или луна) или кнопку
-        // В твоем коде это svg с классом theme-switcher-icon или black-theme-switch
-        const switcher = container.querySelector('svg');
-        
-        // Кликаем
-        fireEvent.click(switcher);
+        fireEvent.click(screenButton());
 
-        // Проверяем, что функция смены темы вызвалась
         expect(mockToggle).toHaveBeenCalled();
     });
 
-    test('рендерит разные иконки в зависимости от темы', () => {
+    test('renders the sun for the black theme and the moon for the white theme', () => {
         const { container, rerender } = render(
             <ThemeChanger isBlackTheme={true} toggleTheme={() => {}} />
         );
-        // Проверяем наличие класса для темной темы (по твоему коду)
-        expect(container.querySelector('.black-theme-switch')).toBeInTheDocument();
 
-        // Перерендериваем со светлой темой
+        expect(container.querySelector('.theme-switcher-icon.sun')).toBeInTheDocument();
+
         rerender(<ThemeChanger isBlackTheme={false} toggleTheme={() => {}} />);
-        expect(container.querySelector('.white-theme-switch')).toBeInTheDocument();
+
+        expect(container.querySelector('.theme-switcher-icon.moon')).toBeInTheDocument();
     });
 });
+
+function screenButton() {
+    return document.querySelector('.theme-changer-button');
+}

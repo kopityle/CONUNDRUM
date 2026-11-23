@@ -1,4 +1,5 @@
 import React from 'react';
+import { OCCUPATIONS, PROFILE_GENDERS } from '../constants/profileOptions';
 
 
 const ProfileInfo = ({
@@ -43,18 +44,10 @@ const ProfileInfo = ({
                             value={newOccupation}
                             onChange={onOccupationChange}
                         >
-                            <option value={''} disabled selected hidden>Выберите роль</option>
-                            <option value={'СТУДЕНТ'}>Учащийся</option>
-                            <option value={'ПРОФЕССОР'}>Преподаватель</option>
-                            <option value={'ЛИНГВИСТ'}>Лингвист</option>
-                            <option value={'ПИСАТЕЛЬ'}>Писатель</option>
-                            <option value={'ЖУРНАЛИСТ'}>Журналист</option>
-                            <option value={'ПЕРЕВОДЧИК'}>Переводчик</option>
-                            <option value={'КРОССВОРДИСТ'}>Составитель игр</option>
-                            <option value={'ГОЛОВОЛОМ'}>Эрудит</option>
-                            <option value={'ИССЛЕДОВАТЕЛЬ'}>Исследователь</option>
-                            <option value={'РАЗРАБОТЧИК ИГР'}>Разработчик игр</option>
-                            <option value={'НЕ УКАЗАНО'}>Другое</option>
+                            <option value='' disabled hidden>Выберите роль</option>
+                            {OCCUPATIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -68,9 +61,10 @@ const ProfileInfo = ({
                             value={newGender}
                             onChange={onGenderChange}
                         >
-                            <option value={''} disabled selected hidden>Пол</option>
-                            <option value={'МУЖСКОЙ'}>Мужcкой</option>
-                            <option value={'ЖЕНСКИЙ'}>Женский</option>
+                            <option value='' disabled hidden>Пол</option>
+                            {PROFILE_GENDERS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
                         </select>
                     </div>
                 </div>

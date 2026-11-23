@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/signUpField.css';
-import { UIUtils } from '../js/UIUtils';
+import EyeIcon from '../assets/svg/EyeIcon';
+import ArrowLeftIcon from '../assets/svg/ArrowLeftIcon';
+import { OCCUPATIONS, GENDERS } from '../constants/profileOptions';
 
 const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginProcess, supabase }) => {
     const [username, setUsername] = useState('');
@@ -105,24 +107,7 @@ const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                                 autoComplete='off'
                                 disabled={isLoading}
                             />
-                            <svg 
-                                className={isPasswordVisible ? 'eye-open' : 'eye-closed'}
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none" 
-                                strokeWidth="2" 
-                                color="#000"
-                                onClick={togglePasswordVisibility}>
-                                {isPasswordVisible ? (
-                                    <>
-                                        <path stroke="#2F2D38" strokeLinecap="round" strokeLinejoin="round" d="M3 13c3.6-8 14.4-8 18 0"/>
-                                        <path stroke="#2F2D38" strokeLinecap="round" strokeLinejoin="round" d="M12 17a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
-                                    </>
-                                ) : (
-                                    <path stroke="#2F2D38" strokeLinecap="round" strokeLinejoin="round" d="m19.5 16-2.475-3.396M12 17.5V14M4.5 
-                                        16l2.469-3.388M3 8c3.6 8 14.4 8 18 0"/>
-                                )}
-                            </svg>
+                            <EyeIcon isVisible={isPasswordVisible} onClick={togglePasswordVisibility} />
                         </div>
                     </div>
                     <div className='birthday-role-gender-input'>
@@ -130,37 +115,27 @@ const SignUpField = ({ isPasswordVisible, togglePasswordVisibility, switchLoginP
                             <select className='reg-role-select registr' id='reg-role-select' required value={occupation}
                                 onChange={(e) => setOccupation(e.target.value)}
                                 disabled={isLoading}>
-                                <option value={''} disabled selected hidden>Выберите роль</option>
-                                <option value={'СТУДЕНТ'}>Учащийся</option>
-                                <option value={'ПРОФЕССОР'}>Преподаватель</option>
-                                <option value={'ЛИНГВИСТ'}>Лингвист</option>
-                                <option value={'ПИСАТЕЛЬ'}>Писатель</option>
-                                <option value={'ЖУРНАЛИСТ'}>Журналист</option>
-                                <option value={'ПЕРЕВОДЧИК'}>Переводчик</option>
-                                <option value={'КРОССВОРДИСТ'}>Составитель игр</option>
-                                <option value={'ГОЛОВОЛОМ'}>Эрудит</option>
-                                <option value={'ИССЛЕДОВАТЕЛЬ'}>Исследователь</option>
-                                <option value={'РАЗРАБОТЧИК ИГР'}>Разработчик игр</option>
-                                <option value={'НЕ УКАЗАНО'}>Другое</option>
+                                <option value='' disabled hidden>Выберите роль</option>
+                                {OCCUPATIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
                             </select>
                         </div>
                         <div className='reg-gender' id='reg-gender'>
                             <select className='reg-gender-select registr' id='reg-gender-select' required value={gender}
                                 onChange={(e) => setGender(e.target.value)}
                                 disabled={isLoading}>
-                                <option value={''} disabled selected hidden>Пол</option>
-                                <option value={'МУЖСКОЙ'}>Муж.</option>
-                                <option value={'ЖЕНСКИЙ'}>Жен.</option>
+                                <option value='' disabled hidden>Пол</option>
+                                {GENDERS.map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
                     {message && <p className='create-account-message'>{message}</p>}
                     <div className='create-and-exit-buttons'>
                         <button className='back-to-main-page-button' onClick={goToMainPage}>
-                            <svg  className='back-to-main-page' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-                                <path stroke="#FBFBFE" strokeLinecap="round" strokeLinejoin="round" 
-                                    strokeWidth="4" d="M25 30 15 20l10-10"/>
-                            </svg>
+                            <ArrowLeftIcon />
                             На главную
                         </button>
                         <button 
