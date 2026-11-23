@@ -1,8 +1,10 @@
 const { z } = require('zod');
 
-// Базовые схемы без refine: их можно преобразовать в JSON Schema для Structured Outputs.
+// Локальные Zod-проверки остаются строгими (regex/refine), но в OpenRouter
+// отправляются отдельные JSON Schema только с типами и обязательными полями.
 const lettersOnly = /^[\p{L}\s]+$/u;
-const shortNoun = /^[\p{L}-]{1,30}$/u;
+// iconQuery уходит в Iconify: только английские lowercase-слова через дефис.
+const shortNoun = /^[a-z][a-z0-9-]{0,39}$/;
 
 const baseWordSchema = z.object({
     word: z.string().trim().min(1).regex(lettersOnly, 'word должен содержать только буквы и пробелы'),
@@ -25,7 +27,7 @@ const textPartSchema = z.object({
 const imagePartSchema = z.object({
     type: z.literal('image'),
     description: z.string().trim().min(1),
-    iconQuery: z.string().trim().regex(shortNoun, 'iconQuery должен быть одним коротким существительным'),
+    iconQuery: z.string().trim().regex(shortNoun, 'iconQuery должен быть одним английским словом в нижнем регистре'),
     subtract_start: z.number().int().min(0),
     subtract_end: z.number().int().min(0)
 });
@@ -37,14 +39,62 @@ const rebusSchema = z.object({
 });
 const rebusesSchema = z.array(rebusSchema).min(1);
 
-/** JSON Schema для response_format (проверки refine в неё не попадают — они применяются после). */
-function toJsonSchema(schema) {
-    const { $schema, ...jsonSchema } = z.toJSONSchema(schema, { target: 'draft-2020-12' });
-    return jsonSchema;
-}
+/**
+ * JSON Schema для response_format OpenRouter.
+ * Намеренно без pattern/minLength/refine: строгие проверки применяются локально
+ * в validateWords/validateRebuses после получения ответа.
+ */
+const wordsJsonSchema = {
+    type: 'array',
+    items: {
+        type: 'object',
+        properties: {
+            word: { type: 'string' },
+            clue: { type: 'string' }
+        },
+        required: ['word', 'clue'],
+        additionalProperties: false
+    }
+};
 
-const wordsJsonSchema = toJsonSchema(wordsSchema);
-const rebusesJsonSchema = toJsonSchema(rebusesSchema);
+const rebusTextPartJsonSchema = {
+    type: 'object',
+    properties: {
+        type: { type: 'string', enum: ['text'] },
+        content: { type: 'string' }
+    },
+    required: ['type', 'content'],
+    additionalProperties: false
+};
+
+const rebusImagePartJsonSchema = {
+    type: 'object',
+    properties: {
+        type: { type: 'string', enum: ['image'] },
+        description: { type: 'string' },
+        iconQuery: { type: 'string' },
+        subtract_start: { type: 'integer' },
+        subtract_end: { type: 'integer' }
+    },
+    required: ['type', 'description', 'iconQuery', 'subtract_start', 'subtract_end'],
+    additionalProperties: false
+};
+
+const rebusesJsonSchema = {
+    type: 'array',
+    items: {
+        type: 'object',
+        properties: {
+            word: { type: 'string' },
+            parts: {
+                type: 'array',
+                items: { anyOf: [rebusTextPartJsonSchema, rebusImagePartJsonSchema] }
+            }
+        },
+        required: ['word', 'parts'],
+        additionalProperties: false
+    }
+};
 
 function normalizeKeys(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -132,7 +182,6 @@ module.exports = {
     rebusSchema,
     wordsJsonSchema,
     rebusesJsonSchema,
-    toJsonSchema,
     validateWords,
     validateRebuses
 };

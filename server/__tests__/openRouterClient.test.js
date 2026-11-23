@@ -224,6 +224,29 @@ describe('callOpenRouter', () => {
         expect(result.items).toHaveLength(1);
     });
 
+    test('при мусорных данных после валидации переходит к следующей модели', async () => {
+        fetchMock
+            .mockResolvedValueOnce(okResponse('[{"word":"{"}]'))
+            .mockResolvedValueOnce(okResponse('[{"word":"кот","clue":"животное"}]'));
+
+        const validateItems = jest.fn((items) => items.filter((item) => item.word === 'кот'));
+
+        const result = await callOpenRouter({
+            apiKey: 'key',
+            apiUrl: 'https://openrouter.test/api',
+            prompt: 'give words',
+            models: ['model-1', 'model-2'],
+            jsonSchema: { type: 'array' },
+            validateItems,
+            fetchImpl: fetchMock
+        });
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(validateItems).toHaveBeenCalledTimes(2);
+        expect(result.model).toBe('model-2');
+        expect(result.items).toEqual([{ word: 'кот', clue: 'животное' }]);
+    });
+
     test('использует актуальные бесплатные модели по умолчанию', () => {
         expect(DEFAULT_MODELS).toEqual(expect.arrayContaining([
             'inclusionai/ling-3.2-flash:free',

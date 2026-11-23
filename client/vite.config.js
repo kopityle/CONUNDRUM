@@ -1,8 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+// GitHub Pages раздаёт проект со вложенного пути /<repo-name>/,
+// поэтому адреса ассетов и роутера должны начинаться с этого префикса.
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] || 'CONUNDRUM';
+const base = isGitHubPages ? `/${repoName}/` : '/';
+
 export default defineConfig({
   plugins: [react()],
+  base,
   envDir: '..',
   // The existing codebase uses JSX inside .js files (CRA convention).
   esbuild: {

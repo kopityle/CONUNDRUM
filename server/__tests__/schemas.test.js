@@ -40,10 +40,13 @@ describe('Zod-схемы ответов LLM', () => {
             expect(wordSchema.safeParse({ word: 'кот', clue: 'Кот на диване' }).success).toBe(false);
         });
 
-        test('JSON Schema содержит обязательные поля word и clue', () => {
+        test('JSON Schema содержит только типы и обязательные поля word и clue', () => {
             expect(wordsJsonSchema.type).toBe('array');
+            expect(wordsJsonSchema.items.properties.word).toEqual({ type: 'string' });
+            expect(wordsJsonSchema.items.properties.clue).toEqual({ type: 'string' });
             expect(wordsJsonSchema.items.required).toEqual(expect.arrayContaining(['word', 'clue']));
             expect(wordsJsonSchema.items.additionalProperties).toBe(false);
+            expect(JSON.stringify(wordsJsonSchema)).not.toContain('pattern');
         });
     });
 
@@ -65,22 +68,21 @@ describe('Zod-схемы ответов LLM', () => {
     });
 
     describe('части ребуса', () => {
-        test('требует iconQuery и неотрицательные сдвиги для image-части', () => {
+        test('требует английский iconQuery и неотрицательные сдвиги для image-части', () => {
             const withoutQuery = {
                 type: 'image', description: 'волна', subtract_start: 0, subtract_end: 0
             };
             // сама схема требует iconQuery...
             expect(imagePartSchema.safeParse(withoutQuery).success).toBe(false);
-            expect(imagePartSchema.safeParse({ ...withoutQuery, subtract_start: -1, iconQuery: 'волна' }).success)
+            expect(imagePartSchema.safeParse({ ...withoutQuery, subtract_start: -1, iconQuery: 'wave' }).success)
                 .toBe(false);
-            // ...но фоллбэк-парсер подставляет его из description
-            const withFallback = validateRebuses([{ word: 'ПОДВАЛ', parts: [withoutQuery] }]);
-            expect(withFallback[0].parts[0].iconQuery).toBe('волна');
+            // русское слово больше не подходит для Iconify
+            expect(imagePartSchema.safeParse({ ...withoutQuery, iconQuery: 'волна' }).success).toBe(false);
 
-            const withQuery = { ...withoutQuery, iconQuery: 'волна' };
+            const withQuery = { ...withoutQuery, iconQuery: 'wave' };
             const result = validateRebuses([{ word: 'ПОДВАЛ', parts: [withQuery] }]);
             expect(result).toHaveLength(1);
-            expect(result[0].parts[0].iconQuery).toBe('волна');
+            expect(result[0].parts[0].iconQuery).toBe('wave');
         });
 
         test('нормализует отсутствующие поля и строковые числа', () => {
@@ -89,6 +91,7 @@ describe('Zod-схемы ответов LLM', () => {
                 parts: [{
                     type: 'image',
                     description: 'дудочка',
+                    iconQuery: 'flute',
                     subtract_start: '1',
                     subtract_end: undefined
                 }]
@@ -97,15 +100,17 @@ describe('Zod-схемы ответов LLM', () => {
             expect(result[0].parts[0]).toEqual({
                 type: 'image',
                 description: 'дудочка',
-                iconQuery: 'дудочка',
+                iconQuery: 'flute',
                 subtract_start: 1,
                 subtract_end: 0
             });
         });
 
-        test('JSON Schema ребуса описывает массив', () => {
+        test('JSON Schema ребуса описывает массив без regex', () => {
             expect(rebusesJsonSchema.type).toBe('array');
             expect(JSON.stringify(rebusesJsonSchema)).toContain('iconQuery');
+            expect(JSON.stringify(rebusesJsonSchema)).not.toContain('pattern');
+            expect(JSON.stringify(rebusesJsonSchema)).not.toContain('minLength');
         });
     });
 });

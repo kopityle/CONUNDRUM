@@ -80,7 +80,7 @@ LTI_SECRET=<lti-consumer-secret>
 # AI / генерация
 OPENROUTER_API_KEY=<openrouter-key>
 OPENROUTER_API_URL=<openrouter-api-url>
-FREEPIK_API_KEY=<freepik-key>
+# Иконки для ребусов ищутся через Iconify, API-ключ не требуется
 ```
 
 ## Запуск через Docker Compose (рекомендуется)

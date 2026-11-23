@@ -6,11 +6,13 @@ import './css/index.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const rawBasename = import.meta.env.BASE_URL || '/';
+const basename = rawBasename === '/' ? '/' : rawBasename.replace(/\/$/, '');
 
 root.render(
   <React.StrictMode>
     <HelmetProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <App />
       </BrowserRouter>
     </HelmetProvider>

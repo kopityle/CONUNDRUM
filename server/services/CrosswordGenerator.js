@@ -47,20 +47,21 @@ The clue must be in the same language as the input text and must NOT contain the
 Return only a JSON array of objects with "word" and "clue" fields.`;
         }
 
-        const { items, data: responseData } = await callOpenRouter({
+        const { items: wordsData, data: responseData } = await callOpenRouter({
             apiKey: this.openrouterApiKey,
             apiUrl: this.openrouterApiUrl,
             prompt,
             models: this.models,
             jsonSchema: wordsJsonSchema,
             schemaName: 'crossword_words',
+            validateItems: validateWords,
             temperature: 0.5,
             timeout: this.timeout,
             fetchImpl: this.fetchImpl
         });
 
-        // Zod: word без цифр/спецсимволов, непустая clue, clue не содержит само слово
-        const wordsData = validateWords(items);
+        // Zod: word без цифр/спецсимволов, непустая clue, clue не содержит само слово.
+        // callOpenRouter уже вызвал validateWords и перешёл к следующей модели при мусоре.
         if (wordsData.length === 0) {
             throw new Error('Нейросеть не вернула валидных слов или все они были отфильтрованы.');
         }

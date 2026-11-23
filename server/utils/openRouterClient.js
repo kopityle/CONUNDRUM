@@ -50,6 +50,8 @@ function shouldTryNextModel(status) {
 /**
  * Запрос к OpenRouter с Structured Outputs, таймаутом и фоллбэком на другие модели.
  * Возвращает { items, data, model, structured }.
+ * validateItems(options) позволяет отбросить мусорные данные и перейти к следующей модели,
+ * не дожидаясь ошибки уже в генераторе.
  */
 async function callOpenRouter({
     apiKey,
@@ -58,6 +60,7 @@ async function callOpenRouter({
     models,
     jsonSchema = null,
     schemaName = 'puzzle_response',
+    validateItems = null,
     temperature = 0.5,
     timeout = REQUEST_TIMEOUT_MS,
     fetchImpl = globalThis.fetch
@@ -127,9 +130,17 @@ async function callOpenRouter({
                 const content = data?.choices?.[0]?.message?.content;
                 if (!content) throw new Error('Нейросеть не сгенерировала текст...');
 
-                const items = parseAiJsonArray(content);
+                let items = parseAiJsonArray(content);
                 if (items.length === 0) {
                     throw new Error('Нейросеть вернула невалидный JSON после очистки и jsonrepair');
+                }
+
+                if (typeof validateItems === 'function') {
+                    const validated = validateItems(items);
+                    if (!Array.isArray(validated) || validated.length === 0) {
+                        throw new Error('Нейросеть вернула данные, не прошедшие валидацию');
+                    }
+                    items = validated;
                 }
 
                 return { items, data, model, structured: useStructured };

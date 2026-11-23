@@ -101,5 +101,24 @@ describe('CrosswordGenerator', () => {
         expect(result.parsedWords.map((item) => item.word)).toEqual(['кот', 'дом']);
         const body = JSON.parse(fetchMock.mock.calls[0][1].body);
         expect(body.response_format.type).toBe('json_schema');
+        expect(JSON.stringify(body.response_format.json_schema.schema)).not.toContain('pattern');
+    });
+
+    test('generateCrossword пробует следующую модель, если первая вернула мусор', async () => {
+        const fetchMock = jest.fn()
+            .mockResolvedValueOnce(okResponse(JSON.stringify([{ word: '{' }])))
+            .mockResolvedValueOnce(okResponse(JSON.stringify([
+                { word: 'кот', clue: 'Домашнее животное' }
+            ])));
+        clg.generateLayout.mockImplementation(() => makeLayout(['КОТ']));
+
+        const generator = new CrosswordGenerator('key', 'https://openrouter.test', {
+            models: ['model-1', 'model-2'],
+            fetchImpl: fetchMock
+        });
+        const result = await generator.generateCrossword('текст про animals', 'text', 2);
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(result.parsedWords.map((item) => item.word)).toEqual(['кот']);
     });
 });
