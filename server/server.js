@@ -67,7 +67,12 @@ app.post('/api/lti/submit-score', async (req, res) => {
 
 app.post('/api/generate-pdf', async (req, res) => {
     try {
-        const pdfBuffer = await generateGamePdf({ ...req.body.gameData, name: req.body.gameName });
+        const pdfBuffer = await generateGamePdf({
+            ...req.body.gameData,
+            name: req.body.gameName,
+            shareId: req.body.shareId || req.body.gameData?.share_id || null,
+            shareUrl: req.body.shareUrl || null
+        });
         const safeName = encodeURIComponent(req.body.gameName || 'game').replace(/[^a-zA-Z0-9-_.]/g, '_');
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);

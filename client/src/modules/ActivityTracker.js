@@ -6,6 +6,8 @@ class ActivityTracker {
         this.incorrectAnswers = 0;
         this.isTracking = false;
         this.generatedGames = []; // <-- Добавляем массив для хранения инфо о играх
+        this.wrongWords = [];
+        this.hintedWords = [];
         console.log("ActivityTracker initialized"); // Лог при создании
     }
 
@@ -17,6 +19,8 @@ class ActivityTracker {
         this.correctAnswers = 0;
         this.incorrectAnswers = 0;
         this.generatedGames = [];
+        this.wrongWords = [];
+        this.hintedWords = [];
         console.log("Activity tracking started at:", this.startTime);
     }
 
@@ -50,7 +54,7 @@ class ActivityTracker {
     }
 
 
-    recordAttempt(isCorrect) {
+    recordAttempt(isCorrect, word) {
        if (!this.isTracking) {
             console.warn("Attempted to record attempt, but tracking is not active.");
             return;
@@ -60,8 +64,21 @@ class ActivityTracker {
             this.correctAnswers++;
         } else {
             this.incorrectAnswers++;
+            const normalizedWord = String(word ?? '').trim().toUpperCase();
+            if (normalizedWord && !this.wrongWords.some(
+                (item) => String(item).toUpperCase() === normalizedWord
+            )) {
+                this.wrongWords.push(normalizedWord);
+            }
         }
          console.log(`Attempt recorded. Correct: ${isCorrect}. Total attempts: ${this.attempts}, Correct: ${this.correctAnswers}, Incorrect: ${this.incorrectAnswers}`);
+    }
+
+    recordHint(word) {
+        const normalizedWord = String(word ?? '').trim().toUpperCase();
+        if (!normalizedWord) return;
+        if (this.hintedWords.some((item) => String(item).toUpperCase() === normalizedWord)) return;
+        this.hintedWords.push(normalizedWord);
     }
 
     getSessionDuration() {
@@ -81,7 +98,9 @@ class ActivityTracker {
             incorrectAnswers: this.incorrectAnswers,
             accuracy: this.attempts > 0 ?
                 (this.correctAnswers / this.attempts * 100).toFixed(2) : '0.00', // Гарантируем строку с 2 знаками
-            generatedGamesCount: this.generatedGames.length
+            generatedGamesCount: this.generatedGames.length,
+            wrongWords: [...this.wrongWords],
+            hintedWords: [...this.hintedWords]
         };
     }
 
@@ -93,6 +112,8 @@ class ActivityTracker {
         this.incorrectAnswers = 0;
         this.isTracking = false;
         this.generatedGames = [];
+        this.wrongWords = [];
+        this.hintedWords = [];
     }
 }
 

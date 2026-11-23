@@ -17,7 +17,9 @@ import {
     fetchRegeneratedLayout,
     saveLtiConfiguration,
     getLtiConfiguration,
+    downloadGamePdf,
 } from '../services/puzzleService';
+import { getReviewTerms } from '../utils/reviewTerms';
 import ShareModal from './ShareModal';
 import AuthRequiredModal from './AuthRequiredModal';
 
@@ -56,6 +58,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
     const [currentShareId, setCurrentShareId] = useState(null);
     const [shareTarget, setShareTarget] = useState(null);
     const [isAuthRequiredOpen, setIsAuthRequiredOpen] = useState(false);
+    const [reviewStats, setReviewStats] = useState(null);
 
     const calculateScore = useCallback(() => {
         const stats = trackerRef.current.getStats();
@@ -86,14 +89,22 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
         if (ltiContextId) {
             await submitLTIScore(calculateScore());
         }
-        trackerRef.current.stopTracking();
+        const stats = trackerRef.current.stopTracking() || trackerRef.current.getStats();
+        setReviewStats({
+            accuracy: parseFloat(stats?.accuracy) || 0,
+            duration: stats?.duration || 0,
+            attempts: stats?.attempts || 0,
+            wrongWords: stats?.wrongWords || [],
+            hintedWords: stats?.hintedWords || [],
+        });
     }, [calculateScore, ltiContextId, submitLTIScore]);
 
-    const handleAttempt = useCallback((isCorrect) => {
-        trackerRef.current.recordAttempt(isCorrect);
+    const handleAttempt = useCallback((isCorrect, word) => {
+        trackerRef.current.recordAttempt(isCorrect, word);
     }, []);
 
     const startGameTracking = useCallback((gameData, sourceName, inputType = 'loaded_or_edited') => {
+        setReviewStats(null);
         trackerRef.current.reset();
         // ActivityTracker не использует метаданные, но они остаются в вызове для совместимости.
         trackerRef.current.startTracking({
@@ -357,33 +368,18 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             return;
         }
 
+        const gameName = puzzleNameForSave || currentGameData.gameType;
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/generate-pdf`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    gameData: currentGameData,
-                    gameName: puzzleNameForSave || currentGameData.gameType,
-                }),
+            await downloadGamePdf({
+                gameData: currentGameData,
+                gameName,
+                shareId: currentShareId,
+                fileName: gameName,
             });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to generate PDF');
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${puzzleNameForSave || currentGameData.gameType || 'game'}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
         } catch (error) {
             notifyError(`Ошибка при скачивании PDF: ${error.message}`);
         }
-    }, [currentGameData, notifyError, puzzleNameForSave]);
+    }, [currentGameData, currentShareId, notifyError, puzzleNameForSave]);
 
     const handleEnterEditMode = useCallback(() => {
         if (!currentGameData?.words) {
@@ -627,6 +623,17 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
                     onCancelEdit={handleCancelEdit}
                     onAttempt={handleAttempt}
                     onComplete={handleComplete}
+                    reviewStats={reviewStats}
+                    reviewTerms={getReviewTerms(currentGameData)}
+                    shareId={currentShareId}
+                    isAuthor={isAuthenticated}
+                    onDownloadPdf={handleDownloadPdf}
+                    onShare={handleShare}
+                    onRestart={() => {
+                        setReviewStats(null);
+                        setGameVersion((version) => version + 1);
+                    }}
+                    onHint={(word) => trackerRef.current.recordHint(word)}
                 />
             </main>
 

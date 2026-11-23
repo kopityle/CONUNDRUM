@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import '../css/RebusDisplay.css';
 
-const RebusDisplay = ({ gameData, onAttempt, onComplete }) => {
+const RebusDisplay = ({ gameData, onAttempt, onComplete, onHint }) => {
     const [solvedWords, setSolvedWords] = useState([]);
     const completedRef = useRef(false);
     const rebuses = gameData?.rebuses;
@@ -27,14 +27,20 @@ const RebusDisplay = ({ gameData, onAttempt, onComplete }) => {
             <h2>Ребусы</h2>
             <div className="rebuses-list">
                 {rebuses.map((rebus, index) => (
-                    <RebusCard key={index} rebus={rebus} index={index} onAttempt={handleAttempt} />
+                    <RebusCard
+                        key={index}
+                        rebus={rebus}
+                        index={index}
+                        onAttempt={handleAttempt}
+                        onHint={onHint}
+                    />
                 ))}
             </div>
         </div>
     );
 };
 
-const RebusCard = ({ rebus, index, onAttempt }) => {
+const RebusCard = ({ rebus, index, onAttempt, onHint }) => {
     const [showAnswer, setShowAnswer] = useState(false);
     const [userAnswer, setUserAnswer] = useState('');
     const [status, setStatus] = useState('initial'); // initial, correct, incorrect
@@ -86,7 +92,15 @@ const RebusCard = ({ rebus, index, onAttempt }) => {
                 {showAnswer || status === 'correct' ? (
                     <span className="rebus-answer-text">{rebus.word}</span>
                 ) : (
-                    <button className="btn-show-answer" onClick={() => setShowAnswer(true)}>Показать ответ</button>
+                    <button
+                        className="btn-show-answer"
+                        onClick={() => {
+                            onHint?.(rebus.word);
+                            setShowAnswer(true);
+                        }}
+                    >
+                        Показать ответ
+                    </button>
                 )}
             </div>
         </div>

@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { getPublicPuzzle, submitAttempt } from '../services/puzzleService';
+import { getPublicPuzzle, submitAttempt, downloadGamePdf } from '../services/puzzleService';
 import ActivityTracker from '../modules/ActivityTracker';
+import { getReviewTerms } from '../utils/reviewTerms';
 import GameWorkspace from './GameWorkspace';
+import PostGameReview from './PostGameReview';
 import NotificationBanner from './NotificationBanner';
 import Preloader from '../assets/svg/Preloader';
 import useNotifications from '../hooks/useNotifications';
@@ -21,7 +23,6 @@ const PublicPlayPage = () => {
 
     const trackerRef = useRef(null);
     if (!trackerRef.current) trackerRef.current = new ActivityTracker();
-    const wrongWordsRef = useRef([]);
     const submittedRef = useRef(false);
 
     useEffect(() => {
@@ -53,7 +54,6 @@ const PublicPlayPage = () => {
             return;
         }
 
-        wrongWordsRef.current = [];
         submittedRef.current = false;
         trackerRef.current.reset();
         trackerRef.current.startTracking();
@@ -62,10 +62,7 @@ const PublicPlayPage = () => {
     };
 
     const handleAttempt = useCallback((isCorrect, word) => {
-        trackerRef.current.recordAttempt(isCorrect);
-        if (!isCorrect && word && !wrongWordsRef.current.includes(word)) {
-            wrongWordsRef.current.push(word);
-        }
+        trackerRef.current.recordAttempt(isCorrect, word);
     }, []);
 
     const handleComplete = useCallback(async () => {
@@ -79,7 +76,8 @@ const PublicPlayPage = () => {
             : 0;
         const durationSec = stats?.duration || 0;
         const finalName = studentName.trim();
-        const wrongWords = [...wrongWordsRef.current];
+        const wrongWords = stats?.wrongWords || [];
+        const hintedWords = stats?.hintedWords || [];
 
         try {
             await submitAttempt(shareId, {
@@ -92,13 +90,43 @@ const PublicPlayPage = () => {
             notifyError(error.message || 'Не удалось сохранить результат.');
         }
 
-        setResult({ studentName: finalName, score, durationSec });
+        setResult({
+            studentName: finalName,
+            score,
+            durationSec,
+            accuracy: score,
+            attempts,
+            wrongWords,
+            hintedWords,
+        });
         setPhase('complete');
     }, [notifyError, shareId, studentName]);
 
     const gameData = puzzle?.game_data
         ? { ...puzzle.game_data, gameType: puzzle.game_type || puzzle.game_data.gameType }
         : null;
+
+    const handleDownloadPdf = async () => {
+        if (!gameData) return;
+        try {
+            await downloadGamePdf({
+                gameData,
+                gameName: puzzle?.name || '',
+                shareId,
+                fileName: puzzle?.name || 'game',
+            });
+        } catch (error) {
+            notifyError(error.message || 'Не удалось скачать PDF.');
+        }
+    };
+
+    const handleRestart = () => {
+        trackerRef.current.stopTracking();
+        setPhase('name');
+        setStudentName('');
+        setResult(null);
+        setReloadKey((key) => key + 1);
+    };
 
     return (
         <>
@@ -159,16 +187,29 @@ const PublicPlayPage = () => {
                                 currentGameData={gameData}
                                 onAttempt={handleAttempt}
                                 onComplete={handleComplete}
+                                onHint={(word) => trackerRef.current.recordHint(word)}
                             />
                         </div>
                     )}
 
                     {phase === 'complete' && result && (
-                        <div className='public-play-step public-play-result'>
-                            <h1>Поздравляем, {result.studentName}!</h1>
-                            <p>Вы справились с головоломкой.</p>
-                            <p className='public-play-score'>Ваш результат: {result.score} из 100</p>
-                            <p>Время решения: {result.durationSec} с</p>
+                        <div className='public-play-result'>
+                            <PostGameReview
+                                stats={{
+                                    accuracy: parseFloat(result.accuracy) || 0,
+                                    duration: result.durationSec || 0,
+                                    attempts: result.attempts || 0,
+                                    wrongWords: result.wrongWords || [],
+                                    hintedWords: result.hintedWords || [],
+                                }}
+                                terms={getReviewTerms(gameData)}
+                                gameType={gameData?.gameType || ''}
+                                studentName={result.studentName}
+                                shareId={shareId}
+                                isAuthor={false}
+                                onDownloadPdf={handleDownloadPdf}
+                                onRestart={handleRestart}
+                            />
                             <Link className='public-play-home-link' to='/'>На главную</Link>
                         </div>
                     )}

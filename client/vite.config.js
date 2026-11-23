@@ -10,6 +10,14 @@ export default defineConfig({
     include: /src\/.*\.jsx?$/,
     exclude: []
   },
+  // Some tooling runs esbuild directly on .js entry points instead of going
+  // through Vite's source transform. Keep the .js -> jsx mapping explicit for
+  // dependency pre-bundling as well so JSX-in-.js never falls back to `js`.
+  optimizeDeps: {
+    esbuildOptions: {
+      loader: { '.js': 'jsx' }
+    }
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:5000'

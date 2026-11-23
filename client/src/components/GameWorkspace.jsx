@@ -4,6 +4,8 @@ import WordSoupBoard from './game/WordSoupBoard';
 import CluesPanel from './game/CluesPanel';
 import RebusDisplay from './RebusDisplay';
 import Preloader from '../assets/svg/Preloader';
+import PostGameReview from './PostGameReview';
+import '../css/postGameReview.css';
 
 const GameWorkspace = ({
     currentGameData,
@@ -18,6 +20,14 @@ const GameWorkspace = ({
     onCancelEdit,
     onAttempt,
     onComplete,
+    reviewStats,
+    reviewTerms = [],
+    shareId = '',
+    isAuthor = false,
+    onDownloadPdf,
+    onShare,
+    onRestart,
+    onHint,
 }) => {
     const [foundWords, setFoundWords] = useState([]);
     const [hint, setHint] = useState(null);
@@ -68,6 +78,7 @@ const GameWorkspace = ({
                     onAttempt={onAttempt}
                     onComplete={onComplete}
                     hint={hint}
+                    onHint={onHint}
                 />
             );
         }
@@ -104,6 +115,7 @@ const GameWorkspace = ({
                             gameData={currentGameData}
                             onAttempt={onAttempt}
                             onComplete={onComplete}
+                            onHint={onHint}
                         />
                     </div>
                 )}
@@ -169,14 +181,31 @@ const GameWorkspace = ({
                                 foundWords={foundWords}
                                 onItemChange={onItemChange}
                                 onShowAnswer={(word) => {
+                                    onHint?.(word);
                                     if (gameType === 'crossword') showHint('word', word);
                                 }}
-                                onRevealLetter={(word) => showHint('letter', word)}
+                                onRevealLetter={(word) => {
+                                    onHint?.(word);
+                                    showHint('letter', word);
+                                }}
                             />
                         </div>
                     )}
                 </section>
             </section>
+
+            {reviewStats && !isEditing && (
+                <PostGameReview
+                    stats={reviewStats}
+                    terms={reviewTerms || []}
+                    gameType={gameType}
+                    shareId={shareId}
+                    isAuthor={isAuthor}
+                    onDownloadPdf={onDownloadPdf}
+                    onShare={onShare}
+                    onRestart={onRestart}
+                />
+            )}
         </section>
     );
 };

@@ -55,6 +55,46 @@ export const getLtiConfiguration = async (resourceLinkId) => {
     }
 };
 
+export const downloadGamePdf = async ({
+    gameData,
+    gameName = '',
+    shareId = '',
+    shareUrl = '',
+    fileName = 'game',
+}) => {
+    const payload = { gameData, gameName, shareId };
+    const resolvedShareUrl = shareUrl || (shareId
+        ? `${import.meta.env.VITE_CLIENT_URL || window.location.origin}/play/${encodeURIComponent(shareId)}`
+        : '');
+    if (resolvedShareUrl) payload.shareUrl = resolvedShareUrl;
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/generate-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        let errorData = {};
+        try {
+            errorData = await response.json();
+        } catch (e) {
+            errorData = { error: response.statusText || 'Неизвестная ошибка при создании PDF.' };
+        }
+        throw new Error(errorData.error || `Ошибка при создании PDF: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName || gameName || 'game'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+};
+
 export const fetchRegeneratedLayout = async (gameType, wordsAndClues) => {
     const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/recalculate-game-layout`, {
         method: 'POST',

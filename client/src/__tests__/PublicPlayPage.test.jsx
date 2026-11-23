@@ -13,11 +13,12 @@ vi.mock('../services/puzzleService', () => ({
 }));
 
 vi.mock('../components/GameWorkspace', () => ({
-    default: ({ currentGameData, onAttempt, onComplete }) => (
+    default: ({ currentGameData, onAttempt, onComplete, onHint }) => (
         <div data-testid='mock-workspace'>
             <span>{currentGameData?.gameType}</span>
             <button type='button' onClick={() => onAttempt(false, 'CODE')}>Wrong attempt</button>
             <button type='button' onClick={() => onAttempt(true, 'TEST')}>Correct attempt</button>
+            <button type='button' onClick={() => onHint?.('TEST')}>Hint</button>
             <button type='button' onClick={() => onComplete()}>Complete game</button>
         </div>
     ),
@@ -84,6 +85,7 @@ describe('PublicPlayPage', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Wrong attempt' }));
         fireEvent.click(screen.getByRole('button', { name: 'Correct attempt' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Hint' }));
         fireEvent.click(screen.getByRole('button', { name: 'Complete game' }));
         fireEvent.click(screen.getByRole('button', { name: 'Complete game' }));
 
@@ -98,6 +100,9 @@ describe('PublicPlayPage', () => {
         });
         expect(await screen.findByText('Поздравляем, Иван!')).toBeInTheDocument();
         expect(screen.getByText('Ваш результат: 50 из 100')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Закрепление материала' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'TEST' })).toHaveAttribute('aria-pressed', 'false');
+        expect(screen.getByText('Стоит повторить')).toBeInTheDocument();
     });
 
     test('shows an error state when the share link is invalid', async () => {

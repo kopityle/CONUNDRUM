@@ -20,7 +20,7 @@ const getWordCells = (word) => {
     return cells;
 };
 
-const CrosswordBoard = ({ grid = [], words = [], onAttempt, onComplete, hint }) => {
+const CrosswordBoard = ({ grid = [], words = [], onAttempt, onComplete, hint, onHint }) => {
     const [values, setValues] = useState({});
     const [statuses, setStatuses] = useState({});
     const [completed, setCompleted] = useState(false);
@@ -157,6 +157,7 @@ const CrosswordBoard = ({ grid = [], words = [], onAttempt, onComplete, hint }) 
             getWordText(word).toUpperCase() === String(hint.value || '').toUpperCase()
         );
         if (!target) return;
+        onHint?.(getWordText(target));
 
         const keys = hint.type === 'word'
             ? target.cells.map(({ row, col }) => cellKey(row, col))
@@ -184,7 +185,7 @@ const CrosswordBoard = ({ grid = [], words = [], onAttempt, onComplete, hint }) 
             keys.forEach((key) => { next[key] = 'valid'; });
             return next;
         });
-    }, [hint, gridData, wordCells, values, checkSolved, completeGame]);
+    }, [hint, gridData, wordCells, values, checkSolved, completeGame, onHint]);
 
     const handleChange = (row, col, event) => {
         const value = event.target.value.slice(-1).toUpperCase();
