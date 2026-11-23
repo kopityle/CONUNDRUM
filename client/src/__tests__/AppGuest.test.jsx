@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
@@ -30,9 +31,11 @@ vi.mock('../components/PublicPlayPage', () => ({
 }));
 
 const renderApp = (path = '/gamegenerator') => render(
-    <MemoryRouter initialEntries={[path]}>
-        <App />
-    </MemoryRouter>
+    <HelmetProvider>
+        <MemoryRouter initialEntries={[path]}>
+            <App />
+        </MemoryRouter>
+    </HelmetProvider>
 );
 
 describe('App guest routing', () => {
@@ -49,6 +52,16 @@ describe('App guest routing', () => {
 
     test('renders the game generator without login and does not fetch a session', async () => {
         renderApp('/gamegenerator');
+
+        expect(await screen.findByText(/Мок генератора/)).toBeInTheDocument();
+        expect(screen.getByText(/гость/)).toBeInTheDocument();
+        expect(getMe).not.toHaveBeenCalled();
+    });
+
+    test('opens the generator from the header start button for a guest', async () => {
+        renderApp('/');
+
+        fireEvent.click(document.querySelector('.start-button'));
 
         expect(await screen.findByText(/Мок генератора/)).toBeInTheDocument();
         expect(screen.getByText(/гость/)).toBeInTheDocument();

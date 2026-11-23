@@ -34,7 +34,9 @@ const Header = ({ isAuth, isBlackTheme, toggleTheme }) => {
   const navToGame = () => navigate('/gamegenerator');
   const navToProfile = () => navigate('/account');
 
-  const startOnClick = isAuth ? navToGame : navToRegister;
+  // Генератор доступен гостям: «Старт» всегда ведёт в /gamegenerator.
+  const startOnClick = navToGame;
+  // Личный кабинет остаётся доступен только после входа.
   const profileOnClick = isAuth ? navToProfile : navToRegister;
 
   return (
@@ -44,8 +46,6 @@ const Header = ({ isAuth, isBlackTheme, toggleTheme }) => {
       </button>
       <button className={`about-button ${isAboutVisible ? 'pressed' : ''}`} onClick={toggleAboutPopup}>О проекте</button>
       <button className={`manual-button ${isManualVisible ? 'pressed' : ''}`} onClick={toggleManualPopup}>Инструкция</button>
-      <button className='go-to-landing-button' onClick={() => window.open('https://conundrum-landing.onrender.com/', '_blank')}>О нас</button>
-      
       <div className='functional-buttons-wrapper'>
         <button className='start-button' onClick={startOnClick}>
           <StartIcon />
