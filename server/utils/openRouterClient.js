@@ -2,12 +2,16 @@ const { parseAiJsonArray } = require('./aiResponse');
 
 const REQUEST_TIMEOUT_MS = 35_000;
 
-// Несколько моделей: при 429/5xx/таймауте автоматически пробуем следующую.
+// Актуальные бесплатные модели. Проверяются через scripts/openrouter-free-models.ps1.
+// Сначала два проверенных фаворита, затем роутер, затем остальные.
 const DEFAULT_MODELS = [
-    'google/gemma-3-27b-it:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen3-235b-a22b:free',
-    'deepseek/deepseek-r1-0528:free'
+    'inclusionai/ling-3.2-flash:free',
+    'baidu/ernie-5.5-flash-preview:free',
+    'openrouter/free',
+    'nvidia/nemotron-3.5-lightning:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
+    'google/gemma-4-31b-it:free',
+    'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
 ];
 
 function resolveModels(models) {
@@ -25,9 +29,22 @@ function isRetryableStatus(status) {
     return status === 429 || status >= 500;
 }
 
-// Некоторые модели отклоняют response_format: json_schema (400/404/422).
-function isSchemaUnsupportedStatus(status) {
-    return status === 400 || status === 404 || status === 422;
+// Schema может быть отклонена (400/404/422), но 404 также означает «модель недоступна».
+// Различаем по телу ответа, иначе повторяем ту же мёртвую модель без response_format.
+function isSchemaUnsupportedError(status, errorText) {
+    if (![400, 404, 422].includes(status)) return false;
+
+    const text = String(errorText || '').toLowerCase();
+    const schemaSignal = /json_schema|structured output|structured_outputs|response_format|schema/i.test(text);
+    const modelSignal = /unavailable for free|paid version|no matching model|model not found|does not exist|invalid model|free variant/i.test(text);
+
+    return schemaSignal && !modelSignal;
+}
+
+// Ошибки модели/запроса — идём к следующей модели. 401/403 намеренно не трогаем:
+// при битом ключе бессмысленно перебирать весь пул.
+function shouldTryNextModel(status) {
+    return status === 400 || status === 404 || status === 422 || isRetryableStatus(status);
 }
 
 /**
@@ -41,7 +58,7 @@ async function callOpenRouter({
     models,
     jsonSchema = null,
     schemaName = 'puzzle_response',
-    temperature = 0.2,
+    temperature = 0.5,
     timeout = REQUEST_TIMEOUT_MS,
     fetchImpl = globalThis.fetch
 }) {
@@ -79,7 +96,7 @@ async function callOpenRouter({
                     headers: {
                         Authorization: `Bearer ${apiKey}`,
                         'Content-Type': 'application/json',
-                        'HTTP-Referer': '*',
+                        'HTTP-Referer': 'http://localhost',
                         'X-Title': 'Conundrum Game Generator',
                         'User-Agent': 'Conundrum/1.0.0'
                     },
@@ -93,12 +110,12 @@ async function callOpenRouter({
                     error.status = response.status;
                     lastError = error;
 
-                    if (useStructured && isSchemaUnsupportedStatus(response.status)) {
+                    if (useStructured && isSchemaUnsupportedError(response.status, errorText)) {
                         console.warn(`Модель ${model} не поддерживает json_schema, повторяем без structured output`);
                         continue; // та же модель, но без response_format
                     }
 
-                    if (isRetryableStatus(response.status)) {
+                    if (shouldTryNextModel(response.status)) {
                         console.warn(`OpenRouter ${model}: статус ${response.status}, пробуем следующую модель`);
                         break; // следующая модель
                     }
@@ -124,7 +141,10 @@ async function callOpenRouter({
                     break;
                 }
 
-                if (error?.status) break; // все HTTP-ошибки, кроме schema fallback, — к следующей модели
+                if (error?.status && !shouldTryNextModel(error.status)) {
+                    throw error; // 401/403 и другие «не перебирать» ошибки — сразу наружу
+                }
+                if (error?.status) break; // остальные HTTP-ошибки — к следующей модели
                 break; // сетевая ошибка / ошибка парсинга — следующая модель
             } finally {
                 clearTimeout(timeoutId);

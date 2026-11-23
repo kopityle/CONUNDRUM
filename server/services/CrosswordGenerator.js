@@ -54,7 +54,7 @@ Return only a JSON array of objects with "word" and "clue" fields.`;
             models: this.models,
             jsonSchema: wordsJsonSchema,
             schemaName: 'crossword_words',
-            temperature: 0.2,
+            temperature: 0.5,
             timeout: this.timeout,
             fetchImpl: this.fetchImpl
         });
