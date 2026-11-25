@@ -11,7 +11,7 @@ const { validateLTIRequest } = initializeLTI();
 const { sendGradeToMoodle } = require('./services/ltiService');
 const { generateGamePdf } = require('./services/pdfGeneratorService');
 const { clientUrl } = require('./utils/clientUrl');
-const { initDatabase, getDatabaseAsync } = require('./db/database');
+const { initDatabase, getDatabaseAsync, isRemoteDatabase } = require('./db/database');
 const { createUserRepository } = require('./db/userRepository');
 const { issueToken, verifyToken, extractToken } = require('./utils/authToken');
 const apiRoutes = require('./routes');
@@ -53,7 +53,10 @@ app.use('/api', apiRoutes);
 
 // === HEALTH CHECK ===
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({
+        status: 'ok',
+        db: isRemoteDatabase() ? 'libsql' : 'sqlite'
+    });
 });
 
 // === LTI и PDF ===
