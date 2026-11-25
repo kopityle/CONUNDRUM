@@ -10,6 +10,7 @@ const { initializeLTI, isLtiInstructor } = require('./middleware/ltiMiddleware')
 const { validateLTIRequest } = initializeLTI();
 const { sendGradeToMoodle } = require('./services/ltiService');
 const { generateGamePdf } = require('./services/pdfGeneratorService');
+const { clientUrl } = require('./utils/clientUrl');
 const { initDatabase, getDatabase } = require('./db/database');
 const { createUserRepository } = require('./db/userRepository');
 const { issueToken, verifyToken, extractToken } = require('./utils/authToken');
@@ -125,7 +126,7 @@ app.post('/lti/launch', validateLTIRequest, async (req, res) => {
             lis_result_sourcedid: ltiSession.lis_result_sourcedid || null
         });
 
-        const redirectUrl = new URL((process.env.CLIENT_URL || 'http://localhost') + '/gamegenerator');
+        const redirectUrl = new URL(clientUrl('/gamegenerator', 'http://localhost'));
         redirectUrl.searchParams.append('auth_token', token);
         redirectUrl.searchParams.append('lti', 'true');
         redirectUrl.searchParams.append(

@@ -166,6 +166,7 @@ npm start
 
 - Consumer key / secret: `LTI_KEY` и `LTI_SECRET` в `server/.env`.
 - Launch URL: `https://<ваш-хост>/lti/launch` (именно без `/api`; nginx проксирует этот путь на backend).
+- `CLIENT_URL` — публичный адрес клиента. Для GitHub Pages можно указать `https://<пользователь>.github.io` — подпапка репозитория добавится автоматически; либо задать полный адрес с путём. Для нестандартного деплоя используйте `CLIENT_BASE_PATH=/<путь>`.
 - Роли: `Instructor`/`Teacher`/`Administrator`/`ContentDeveloper`/`TeachingAssistant` открывают форму настройки задания, `Learner` — режим решения. Изменить конфигурацию задания может только преподаватель.
 - Оценка отправляется в `lis_outcome_service_url` из launch-запроса; данные outcome встроены в JWT, поэтому отправка работает даже если браузер блокирует сторонние cookie внутри iframe.
 

@@ -347,5 +347,8 @@ describe('generateGamePdf', () => {
             entry.value.includes('длинная') || entry.value.includes('многоточием')
         ).length).toBeGreaterThan(words.length);
         expect(registry.pages[0].some((line) => line.includes('…'))).toBe(false);
+        // Таблица «Быстрая проверка» на странице преподавателя тоже не режется.
+        expect(registry.pages[1].some((line) => line.includes('…'))).toBe(false);
+        longClue.split(' ').forEach((part) => expect(registry.pages[1].join(' ')).toContain(part));
     });
 });

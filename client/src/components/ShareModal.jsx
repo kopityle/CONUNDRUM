@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { clientUrl } from '../services/apiConfig';
 import '../css/shareModal.css';
 
 const copyText = async (text) => {
@@ -34,7 +35,7 @@ const ShareModal = ({ shareId, name, onClose }) => {
     const [copyError, setCopyError] = useState('');
 
     const link = useMemo(
-        () => `${import.meta.env.VITE_CLIENT_URL || window.location.origin}/play/${shareId}`,
+        () => clientUrl(`/play/${encodeURIComponent(shareId)}`),
         [shareId]
     );
 

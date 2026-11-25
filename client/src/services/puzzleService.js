@@ -1,5 +1,6 @@
 // src/services/puzzleService.js
 import { apiFetch, apiUrl } from './authService';
+import { clientUrl } from './apiConfig';
 
 const normalizePuzzles = (data) => {
     if (Array.isArray(data)) return data;
@@ -64,7 +65,7 @@ export const downloadGamePdf = async ({
 }) => {
     const payload = { gameData, gameName, shareId };
     const resolvedShareUrl = shareUrl || (shareId
-        ? `${import.meta.env.VITE_CLIENT_URL || window.location.origin}/play/${encodeURIComponent(shareId)}`
+        ? clientUrl(`/play/${encodeURIComponent(shareId)}`)
         : '');
     if (resolvedShareUrl) payload.shareUrl = resolvedShareUrl;
 

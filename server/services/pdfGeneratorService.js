@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
+const { clientUrl } = require('../utils/clientUrl');
 
 const FONT_NAME = 'Roboto';
 const FONT_PATH = path.join(__dirname, '..', 'fonts', 'RobotoMono.ttf');
@@ -33,7 +34,7 @@ function buildShareUrl(gameData) {
     if (gameData.shareUrl) return String(gameData.shareUrl);
     const shareId = gameData.shareId || gameData.share_id;
     if (!shareId) return '';
-    return `${process.env.CLIENT_URL || ''}/play/${shareId}`;
+    return clientUrl(`/play/${encodeURIComponent(shareId)}`);
 }
 
 /**
@@ -787,18 +788,18 @@ function drawTeacherPage(doc, gameData, context) {
         cursorY = Math.min(bottomLimit - 120, layout.bottom + 24);
         const height = Math.max(0, bottomLimit - cursorY);
         drawItemList(doc, 'Быстрая проверка:', fastCheckItems(gameData, words),
-            PAGE_MARGIN, cursorY, contentWidth, height, { fontSize: 9, columns: 2 });
+            PAGE_MARGIN, cursorY, contentWidth, height, { fontSize: 9, columns: 2, maxLines: 3, allowEllipsis: false });
     } else if (gameData.gameType === 'rebus') {
         const rebuses = (Array.isArray(gameData.rebuses) ? gameData.rebuses : []).filter(Boolean);
         cursorY = PAGE_MARGIN + 48;
         const listHeight = Math.min(460, Math.max(60, bottomLimit - cursorY - 180));
         const items = rebuses.map((rebus, index) => `${index + 1}. ${rebus.word || '?'} — ${deriveRebusLogic(rebus, true)}`);
         cursorY = drawItemList(doc, 'Ответы и разгадка:', items,
-            PAGE_MARGIN, cursorY, contentWidth, listHeight, { fontSize: 10, columns: 1, maxLines: 2 });
+            PAGE_MARGIN, cursorY, contentWidth, listHeight, { fontSize: 10, columns: 1, maxLines: 3, allowEllipsis: false });
         drawItemList(doc, 'Быстрая проверка:', fastCheckItems(gameData, words),
             PAGE_MARGIN, Math.min(bottomLimit - 120, cursorY + 14), contentWidth,
             Math.max(0, bottomLimit - Math.min(bottomLimit - 120, cursorY + 14)),
-            { fontSize: 9, columns: 2 });
+            { fontSize: 9, columns: 2, maxLines: 3, allowEllipsis: false });
     } else {
         const grid = normalizeGrid(gameData.grid);
         const layout = drawGrid(doc, grid, GRID_TOP, GRID_MAX_HEIGHT, {
@@ -811,11 +812,11 @@ function drawTeacherPage(doc, gameData, context) {
             return `${index + 1}. ${answer}${wordCoordinates(word)}`;
         });
         cursorY = drawItemList(doc, 'Найденные слова:', found,
-            PAGE_MARGIN, cursorY, contentWidth, 150, { fontSize: 9, columns: 2 });
+            PAGE_MARGIN, cursorY, contentWidth, 150, { fontSize: 9, columns: 2, maxLines: 3, allowEllipsis: false });
         const checkTop = Math.min(bottomLimit - 100, cursorY + 12);
         drawItemList(doc, 'Быстрая проверка:', fastCheckItems(gameData, words),
             PAGE_MARGIN, checkTop, contentWidth, Math.max(0, bottomLimit - checkTop),
-            { fontSize: 9, columns: 2 });
+            { fontSize: 9, columns: 2, maxLines: 3, allowEllipsis: false });
     }
 }
 
