@@ -60,6 +60,11 @@ const GameWorkspace = ({
         if (isEditing && editableWords.length) return editableWords;
         return gameType === 'crossword' ? crosswordWords : wordSoupWords;
     }, [isEditing, editableWords, gameType, crosswordWords, wordSoupWords]);
+    const hasBoardContent = useMemo(() => {
+        if (gameType === 'crossword') return crosswordGrid.length > 0 && crosswordWords.length > 0;
+        if (gameType === 'wordsoup') return wordSoupGrid.length > 0;
+        return true;
+    }, [gameType, crosswordGrid, crosswordWords, wordSoupGrid]);
 
     const showHint = (type, word) => {
         setHint({ type, value: word, token: `${Date.now()}-${Math.random()}` });
@@ -118,7 +123,7 @@ const GameWorkspace = ({
                     </div>
                 )}
 
-                {currentGameData && gameType !== 'rebus' && (
+                {currentGameData && gameType !== 'rebus' && hasBoardContent && (
                     <div
                         id='crossword-container'
                         className={isEditing ? 'grid-disabled' : ''}
@@ -126,6 +131,12 @@ const GameWorkspace = ({
                     >
                         {renderBoard()}
                     </div>
+                )}
+
+                {currentGameData && gameType !== 'rebus' && !hasBoardContent && !isLoading && (
+                    <p className='game-empty-state' role='status'>
+                        В этой игре пока нет слов и подсказок. Попросите автора добавить их.
+                    </p>
                 )}
 
                 <section className='puzzle-info-and-iditing'>
@@ -166,7 +177,7 @@ const GameWorkspace = ({
                         </div>
                     )}
 
-                    {currentGameData && gameType !== 'rebus' && (
+                    {currentGameData && gameType !== 'rebus' && hasBoardContent && (
                         <div
                             id='clues-container'
                             style={{ display: isLoading ? 'none' : 'flex' }}

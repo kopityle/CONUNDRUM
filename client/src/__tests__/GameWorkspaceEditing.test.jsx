@@ -39,3 +39,11 @@ test('edit mode keeps the board mounted and marks it as read-only', () => {
     expect(container.querySelector('#crossword-container')).toHaveClass('grid-disabled');
     expect(container.querySelector('#preloader-container')).toHaveClass('preloader-overlay');
 });
+
+test('shows a clear message instead of empty board and clue headings', () => {
+    render(<GameWorkspace currentGameData={{ gameType: 'crossword', grid: [], words: [] }} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('В этой игре пока нет слов и подсказок');
+    expect(screen.queryByTestId('crossword-board')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('clues-panel')).not.toBeInTheDocument();
+});
