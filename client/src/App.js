@@ -5,7 +5,7 @@ import SignInUp from './components/SignInUp';
 import PersonalAccount from './components/PersonalAccount';
 import GameGenerator from './components/GameGenerator';
 import PublicPlayPage from './components/PublicPlayPage';
-import { getMe, getToken, setToken, AUTH_CHANGED_EVENT } from './services/authService';
+import { getMe, getToken, setToken, removeToken, AUTH_CHANGED_EVENT } from './services/authService';
 
 const AppContent = () => {
     const [isBlackTheme, setIsBlackTheme] = useState(() => {
@@ -47,6 +47,7 @@ const AppContent = () => {
                 if (mounted) setUser(currentUser || null);
             } catch (error) {
                 console.error('App.js: Failed to restore session:', error);
+                if (error?.status === 401) removeToken();
                 if (mounted) setUser(null);
             } finally {
                 if (mounted) setIsAuthResolved(true);

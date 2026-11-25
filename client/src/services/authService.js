@@ -81,9 +81,20 @@ export const apiFetch = async (path, options = {}) => {
     }
 
     if (!response.ok) {
-        const message = (data && (data.error || data.message))
-            || response.statusText
-            || `Ошибка запроса (${response.status})`;
+        // Токен может пережить пересоздание БД на хостинге: подпись ещё верная,
+        // но пользователя в базе уже нет. Такой ответ означает потерю сессии,
+        // поэтому очищаем токен, чтобы не получать «Unauthorized» на каждом
+        // следующем запросе (в частности при редактировании пазла).
+        const expiredSession = response.status === 401 && data?.error === 'Unauthorized';
+        if (expiredSession) {
+            removeToken();
+            dispatchAuthChanged(null);
+        }
+        const message = expiredSession
+            ? 'Сессия сброшена. Войдите снова.'
+            : (data && (data.error || data.message))
+                || response.statusText
+                || `Ошибка запроса (${response.status})`;
         const error = new Error(message);
         error.status = response.status;
         error.data = data;
