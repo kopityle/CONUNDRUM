@@ -419,6 +419,13 @@
     }
 }
 
+/* На 501–549px панель выше контейнера, поэтому ему нужен внутренний скролл. */
+@media (min-width: 501px) and (max-width: 549px) {
+    .about-account-info {
+        overflow-y: auto;
+    }
+}
+
 @media (max-width: 549px) {
     .user-saved-games-and-tags {
         width: 100%;

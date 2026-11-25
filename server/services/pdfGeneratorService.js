@@ -687,7 +687,6 @@ function drawStudentPage(doc, gameData, context) {
     drawHeader(doc, contentWidth, 17, `${label}: ${name}`);
 
     const words = collectWords(gameData);
-    const rightEdge = doc.page.width - PAGE_MARGIN;
     const clueWidth = context.qrBuffer ? contentWidth - QR_SIZE - 14 : contentWidth;
     const clueX = PAGE_MARGIN;
     let clueTop = GRID_TOP + GRID_MAX_HEIGHT + 22;
@@ -703,7 +702,8 @@ function drawStudentPage(doc, gameData, context) {
         const across = words.filter(isAcross).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
         const down = words.filter(isDown).sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
         const columnWidth = (clueWidth - 10) / 2;
-        const height = rightEdge - clueTop - (context.qrBuffer ? QR_RESERVED_HEIGHT : 20) + 20;
+        const bottomLimit = doc.page.height - PAGE_MARGIN - (context.qrBuffer ? QR_RESERVED_HEIGHT : 16);
+        const height = Math.max(0, bottomLimit - clueTop);
         drawItemList(doc, 'По горизонтали:', across.map((word) => `${word.position || '?'} ${wordHint(word)}`),
             clueX, clueTop, columnWidth, height, { fontSize: 9 });
         drawItemList(doc, 'По вертикали:', down.map((word) => `${word.position || '?'} ${wordHint(word)}`),

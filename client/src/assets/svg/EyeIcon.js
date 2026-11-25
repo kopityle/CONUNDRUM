@@ -7,6 +7,13 @@ const EyeIcon = ({ isVisible = false, onClick }) => (
         strokeWidth='2'
         color='#000'
         onClick={onClick}
+        onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onClick?.(event);
+            }
+        }}
+        tabIndex={0}
         role='button'
         aria-label={isVisible ? 'Скрыть пароль' : 'Показать пароль'}
     >

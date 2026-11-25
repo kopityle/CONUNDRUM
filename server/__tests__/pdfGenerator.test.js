@@ -321,4 +321,27 @@ describe('generateGamePdf', () => {
         expect(registry.images.length).toBeGreaterThan(0);
         expect(registry.pages[0]).toContain('Решить онлайн');
     });
+
+    test('QR: все подсказки кроссворда печатаются на странице ученика', async () => {
+        const words = [
+            { word: 'КОТ', clue: 'Подсказка раз', startx: 1, starty: 1, orientation: 'across', position: 1 },
+            { word: 'ШАР', clue: 'Подсказка два', startx: 1, starty: 3, orientation: 'across', position: 2 },
+            { word: 'ДОМ', clue: 'Подсказка три', startx: 2, starty: 2, orientation: 'across', position: 3 },
+            { word: 'ЛЕС', clue: 'Подсказка четыре', startx: 3, starty: 2, orientation: 'across', position: 4 },
+            { word: 'РЕКА', clue: 'Подсказка пять', startx: 1, starty: 1, orientation: 'down', position: 5 },
+            { word: 'ГОРА', clue: 'Подсказка шесть', startx: 2, starty: 1, orientation: 'down', position: 6 },
+        ];
+        const registry = await generateWithMockedDoc({
+            ...crosswordData(),
+            words,
+            layout: { result: [] },
+            shareId: 'abc123',
+        });
+        const studentPage = registry.pages[0].join(' ');
+
+        expect(studentPage).toContain('По горизонтали:');
+        expect(studentPage).toContain('По вертикали:');
+        words.forEach((word) => expect(studentPage).toContain(word.clue));
+        expect(registry.pages[0]).not.toContain('…');
+    });
 });

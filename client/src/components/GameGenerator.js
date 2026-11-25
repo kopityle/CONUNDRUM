@@ -11,6 +11,7 @@ import useNotifications from '../hooks/useNotifications';
 import ActivityTracker from '../modules/ActivityTracker';
 import GameLogotype from '../assets/svg/GameLogotype';
 import { apiUrl } from '../services/apiConfig';
+import { apiFetch } from '../services/authService';
 import {
     createPuzzle,
     getPuzzle,
@@ -26,7 +27,7 @@ import AuthRequiredModal from './AuthRequiredModal';
 
 const GAME_TYPES = ['crossword', 'wordsoup', 'rebus'];
 
-const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) => {
+const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved = true, ltiUserId }) => {
     const navigate = useNavigate();
     const { notifications, notifyError, notifySuccess, dismissNotification } = useNotifications();
     const trackerRef = useRef(null);
@@ -71,23 +72,19 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
 
     const submitLTIScore = useCallback(async (score) => {
         try {
-            const response = await fetch(apiUrl('/api/lti/submit-score'), {
+            // apiFetch добавляет Bearer-токен: внутри iframe LMS сессионную
+            // cookie браузер может не отправить, а токен всегда под рукой.
+            await apiFetch('/api/lti/submit-score', {
                 method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ score, totalScore: 100 }),
+                body: { score, totalScore: 100 },
             });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Failed to submit score (${response.status}): ${errorData.error || response.statusText}`);
-            }
         } catch (error) {
             console.error('Error submitting LTI score:', error);
         }
     }, []);
 
     const handleComplete = useCallback(async () => {
-        if (ltiContextId) {
+        if (isLTI || ltiContextId) {
             await submitLTIScore(calculateScore());
         }
         const stats = trackerRef.current.stopTracking() || trackerRef.current.getStats();
@@ -98,7 +95,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             wrongWords: stats?.wrongWords || [],
             hintedWords: stats?.hintedWords || [],
         });
-    }, [calculateScore, ltiContextId, submitLTIScore]);
+    }, [calculateScore, isLTI, ltiContextId, submitLTIScore]);
 
     const handleAttempt = useCallback((isCorrect, word) => {
         trackerRef.current.recordAttempt(isCorrect, word);
@@ -187,11 +184,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
     useEffect(() => {
         trackerRef.current.startTracking();
 
+        // Ждём только проверку сессии, но не самого пользователя: в LTI без
+        // токена user может никогда не появиться, и спиннер зависнет навсегда.
+        if (isLTI && !isAuthResolved) return;
+
         if (isLTI) {
-            if (!user) {
-                setIsLoading(true);
-                return;
-            }
 
             const mode = urlParams.get('mode');
             const resource = urlParams.get('resource_link_id');
@@ -204,6 +201,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             } else if (mode === 'solve') {
                 setIsFormCreatingPuzzle(false);
                 setIsConfigureMode(false);
+                if (!isAuthenticated) {
+                    notifyError('Войдите через LTI, чтобы загрузить задание.');
+                    setIsLoading(false);
+                    return;
+                }
                 setIsLoading(true);
                 getLtiConfiguration(resource)
                     .then((config) => {
@@ -231,7 +233,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             setIsFormCreatingPuzzle(true);
             setIsConfigureMode(true);
         }
-    }, [generateGameFromConfig, isLTI, loadAndDisplayPuzzle, notifyError, urlParams, user]);
+    }, [generateGameFromConfig, isAuthResolved, isAuthenticated, isLTI, loadAndDisplayPuzzle, notifyError, urlParams]);
 
     useEffect(() => () => trackerRef.current.stopTracking(), []);
 
@@ -332,6 +334,32 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
         else handleGenerateGame(params);
     }, [handleGenerateGame, handleSaveLtiConfig, isConfigureMode, isLTI]);
 
+    // Обновление пазла доступно только владельцу. Гость может создавать пазлы
+    // (POST разрешён без токена), поэтому при утерянной сессии сохраняем копию,
+    // а не показываем ошибку «Unauthorized» из PUT /api/puzzles/:id.
+    const savePuzzle = useCallback(async ({ name, gameData }) => {
+        if (currentPuzzleId && isAuthenticated) {
+            try {
+                const puzzle = await updatePuzzle(currentPuzzleId, {
+                    name,
+                    game_data: gameData,
+                });
+                return { puzzle, created: false };
+            } catch (error) {
+                if (error?.status !== 401) throw error;
+                setCurrentPuzzleId(null);
+            }
+        }
+
+        const puzzle = await createPuzzle({
+            name,
+            game_type: gameData.gameType,
+            game_data: gameData,
+            tags: [],
+        });
+        return { puzzle, created: true };
+    }, [createPuzzle, currentPuzzleId, isAuthenticated, updatePuzzle]);
+
     const handleActualSavePuzzle = useCallback(async () => {
         if (!puzzleNameForSave.trim()) {
             notifyError('Пожалуйста, введите название игры.');
@@ -346,17 +374,15 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
             return;
         }
 
-        const puzzleToSave = {
-            name: puzzleNameForSave,
-            game_type: currentGameData.gameType,
-            game_data: currentGameData,
-            tags: [],
-        };
-
         try {
-            const savedPuzzle = await createPuzzle(puzzleToSave);
+            const { puzzle: savedPuzzle, created } = await savePuzzle({
+                name: puzzleNameForSave,
+                gameData: currentGameData,
+            });
             if (savedPuzzle?.id) {
-                notifySuccess(`Игра "${savedPuzzle.name}" успешно сохранена!`);
+                notifySuccess(created
+                    ? `Игра "${savedPuzzle.name}" успешно сохранена!`
+                    : `Пазл "${savedPuzzle.name}" успешно обновлен!`);
                 setCurrentPuzzleId(savedPuzzle.id);
                 setCurrentShareId(savedPuzzle.share_id || null);
                 setOriginalPuzzleNameForEdit(savedPuzzle.name);
@@ -366,7 +392,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
         } catch (error) {
             notifyError(`Ошибка при сохранении: ${error.message || 'Неизвестная ошибка'}`);
         }
-    }, [currentGameData, notifyError, notifySuccess, puzzleNameForSave]);
+    }, [currentGameData, notifyError, notifySuccess, puzzleNameForSave, savePuzzle]);
 
     const handleDownloadPdf = useCallback(async () => {
         if (!currentGameData) {
@@ -461,36 +487,29 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
                     words: regenerated.words,
                 };
 
-            if (currentPuzzleId) {
-                const updatedPuzzle = await updatePuzzle(currentPuzzleId, {
-                    name: puzzleNameForSave,
-                    game_data: updatedGameData,
-                });
-                if (updatedPuzzle?.share_id) setCurrentShareId(updatedPuzzle.share_id);
-                setCurrentGameData(updatedGameData);
-                setOriginalPuzzleNameForEdit(puzzleNameForSave);
-                notifySuccess(`Пазл "${puzzleNameForSave}" успешно обновлен!`);
-            } else {
-                if (!puzzleNameForSave.trim()) {
-                    throw new Error('Пожалуйста, введите название для нового пазла.');
-                }
-                const puzzleToCreate = {
-                    name: puzzleNameForSave,
-                    game_type: currentGameData.gameType,
-                    game_data: updatedGameData,
-                    tags: [],
-                };
-                const newSavedPuzzle = await createPuzzle(puzzleToCreate);
-                if (!newSavedPuzzle?.id) {
-                    throw new Error('Не удалось создать и сохранить новый пазл.');
-                }
-                setCurrentGameData(updatedGameData);
-                setCurrentPuzzleId(newSavedPuzzle.id);
-                setCurrentShareId(newSavedPuzzle.share_id || null);
-                setPuzzleNameForSave(newSavedPuzzle.name);
-                setOriginalPuzzleNameForEdit(newSavedPuzzle.name);
-                notifySuccess(`Новый пазл "${newSavedPuzzle.name}" успешно создан и сохранен!`);
+            if (!puzzleNameForSave.trim()) {
+                throw new Error('Пожалуйста, введите название для пазла.');
             }
+
+            const hadSavedPuzzle = Boolean(currentPuzzleId);
+            const { puzzle: savedPuzzle, created } = await savePuzzle({
+                name: puzzleNameForSave,
+                gameData: updatedGameData,
+            });
+            if (!savedPuzzle?.id) {
+                throw new Error('Не удалось сохранить изменения пазла.');
+            }
+
+            setCurrentGameData(updatedGameData);
+            setCurrentPuzzleId(savedPuzzle.id);
+            setCurrentShareId(savedPuzzle.share_id || null);
+            setPuzzleNameForSave(savedPuzzle.name || puzzleNameForSave);
+            setOriginalPuzzleNameForEdit(savedPuzzle.name || puzzleNameForSave);
+            notifySuccess(created && hadSavedPuzzle
+                ? `Изменения сохранены как новый пазл "${savedPuzzle.name}". Чтобы обновить исходный, войдите в аккаунт.`
+                : created
+                    ? `Новый пазл "${savedPuzzle.name}" успешно создан и сохранен!`
+                    : `Пазл "${savedPuzzle.name}" успешно обновлен!`);
 
             setEditableWordsAndClues([]);
             setHasUnsavedChanges(false);
@@ -511,6 +530,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
         notifySuccess,
         originalPuzzleNameForEdit,
         puzzleNameForSave,
+        savePuzzle,
         startGameTracking,
     ]);
 
@@ -592,6 +612,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
                     handleShare={handleShare}
                     handleDownloadPdf={handleDownloadPdf}
                     isLoading={isLoading}
+                    isReadOnly={isLTI && !isConfigureMode}
                     toggleFormCreatingPuzzle={() => setIsFormCreatingPuzzle((visible) => !visible)}
                     isFormCreatingPuzzle={isFormCreatingPuzzle}
                     navToProfile={() => navigate('/account')}
@@ -632,7 +653,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, ltiUserId }) =
                     reviewStats={reviewStats}
                     reviewTerms={getReviewTerms(currentGameData)}
                     shareId={currentShareId}
-                    isAuthor={isAuthenticated}
+                    isAuthor={isAuthenticated && !(isLTI && !isConfigureMode)}
                     onDownloadPdf={handleDownloadPdf}
                     onShare={handleShare}
                     onRestart={() => {

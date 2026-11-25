@@ -153,7 +153,7 @@ npm start
 ### LTI и прочее
 
 - `GET /api/lti/config/:resourceLinkId` — сохранённые `generation_params` (требуется авторизация).
-- `PUT /api/lti/config/:resourceLinkId` — `{generationParams}` → `{success:true}`.
+- `PUT /api/lti/config/:resourceLinkId` — `{generationParams}` → `{success:true}` (только преподаватель LTI).
 - `POST /api/generate-game` — генерация игры по загруженному файлу.
 - `POST /api/recalculate-game-layout` — перерасчёт layout кроссворда.
 - `POST /api/track-activity` — трекинг активности.
@@ -161,6 +161,13 @@ npm start
 - `POST /api/lti/submit-score` — отправка результата в LMS через LTI.
 - `GET /api/health` — проверка состояния backend.
 - `POST /lti/launch` — LTI launch с редиректом в клиент.
+
+### Настройка Moodle (LTI 1.1)
+
+- Consumer key / secret: `LTI_KEY` и `LTI_SECRET` в `server/.env`.
+- Launch URL: `https://<ваш-хост>/lti/launch` (именно без `/api`; nginx проксирует этот путь на backend).
+- Роли: `Instructor`/`Teacher`/`Administrator`/`ContentDeveloper`/`TeachingAssistant` открывают форму настройки задания, `Learner` — режим решения. Изменить конфигурацию задания может только преподаватель.
+- Оценка отправляется в `lis_outcome_service_url` из launch-запроса; данные outcome встроены в JWT, поэтому отправка работает даже если браузер блокирует сторонние cookie внутри iframe.
 
 ## Тесты
 

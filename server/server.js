@@ -6,13 +6,13 @@ const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const { initializeLTI } = require('./middleware/ltiMiddleware');
+const { initializeLTI, isLtiInstructor } = require('./middleware/ltiMiddleware');
 const { validateLTIRequest } = initializeLTI();
 const { sendGradeToMoodle } = require('./services/ltiService');
 const { generateGamePdf } = require('./services/pdfGeneratorService');
 const { initDatabase, getDatabase } = require('./db/database');
 const { createUserRepository } = require('./db/userRepository');
-const { issueToken } = require('./utils/authToken');
+const { issueToken, verifyToken, extractToken } = require('./utils/authToken');
 const apiRoutes = require('./routes');
 
 initDatabase();
@@ -59,12 +59,24 @@ app.get('/api/health', (req, res) => {
 
 // === LTI и PDF ===
 app.post('/api/lti/submit-score', async (req, res) => {
-    if (!req.session?.lti) return res.status(403).json({ error: 'No LTI session' });
+    // Браузеры всё чаще блокируют сторонние cookie внутри iframe LMS, поэтому
+    // данные outcome дублируются в JWT и принимаются наравне с сессией.
+    const tokenClaims = verifyToken(extractToken(req)) || {};
+    const session = req.session || {};
+    const hasSessionOutcome = Boolean(
+        session.lti && session.lis_outcome_service_url && session.lis_result_sourcedid
+    );
+    const hasTokenOutcome = Boolean(
+        tokenClaims.lti && tokenClaims.lis_outcome_service_url && tokenClaims.lis_result_sourcedid
+    );
+    if (!hasSessionOutcome && !hasTokenOutcome) {
+        return res.status(403).json({ error: 'No LTI session' });
+    }
     try {
         const { score, totalScore } = req.body;
         await sendGradeToMoodle(
-            req.session.lis_outcome_service_url,
-            req.session.lis_result_sourcedid,
+            tokenClaims.lis_outcome_service_url || session.lis_outcome_service_url,
+            tokenClaims.lis_result_sourcedid || session.lis_result_sourcedid,
             parseFloat(score), parseFloat(totalScore),
             process.env.LTI_KEY, process.env.LTI_SECRET
         );
@@ -103,10 +115,14 @@ app.post('/lti/launch', validateLTIRequest, async (req, res) => {
         });
 
         const resourceLinkId = ltiSession.resource_link_id || '';
+        const isInstructor = isLtiInstructor(ltiSession.roles);
         const token = issueToken(user, {
             lti: true,
             ltiUserId,
-            resource_link_id: resourceLinkId
+            ltiRole: isInstructor ? 'instructor' : 'learner',
+            resource_link_id: resourceLinkId,
+            lis_outcome_service_url: ltiSession.lis_outcome_service_url || null,
+            lis_result_sourcedid: ltiSession.lis_result_sourcedid || null
         });
 
         const redirectUrl = new URL((process.env.CLIENT_URL || 'http://localhost') + '/gamegenerator');
@@ -114,7 +130,7 @@ app.post('/lti/launch', validateLTIRequest, async (req, res) => {
         redirectUrl.searchParams.append('lti', 'true');
         redirectUrl.searchParams.append(
             'mode',
-            String(ltiSession.roles || '').toLowerCase().includes('instructor') ? 'configure' : 'solve'
+            isInstructor ? 'configure' : 'solve'
         );
         redirectUrl.searchParams.append('resource_link_id', resourceLinkId);
 

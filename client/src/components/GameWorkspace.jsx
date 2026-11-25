@@ -66,8 +66,6 @@ const GameWorkspace = ({
     };
 
     const renderBoard = () => {
-        if (isEditing) return null;
-
         if (gameType === 'crossword') {
             if (!crosswordGrid.length || !crosswordWords.length) return null;
             return (
@@ -110,7 +108,7 @@ const GameWorkspace = ({
                 </div>
 
                 {currentGameData && gameType === 'rebus' && (
-                    <div className='rebus-wrapper'>
+                    <div className='rebus-wrapper' style={{ display: isLoading ? 'none' : undefined }}>
                         <RebusDisplay
                             gameData={currentGameData}
                             onAttempt={onAttempt}

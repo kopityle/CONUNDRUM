@@ -69,6 +69,11 @@
     -webkit-overflow-scrolling: touch;
 }
 
+#crossword-container.grid-disabled {
+    pointer-events: none;
+    opacity: 0.55;
+}
+
 #clues-container {
     overflow-x: clip;
     overflow-y: auto;
@@ -293,7 +298,7 @@ input.crossword-input:focus {
 
 .word-soup-container {
     -webkit-overflow-scrolling: touch;
-    touch-action: none;
+    touch-action: pan-y;
     overflow: auto;
     scrollbar-width: none;
     aspect-ratio: 1 / 1;

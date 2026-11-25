@@ -12,9 +12,21 @@
 # production
 /client/build
 /client/dist
+/client/.vite
 
 # local SQLite database
 /server/data/
+
+# generated presentation artifacts
+/docs/*.pptx
+/docs/_template_report.json
+/docs/fsi-assets/
+/docs/presentation-assets/
+/docs/presentation-preview/
+
+# OS
+Thumbs.db
+desktop.ini
 
 # misc
 .DS_Store

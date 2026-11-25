@@ -216,12 +216,14 @@
     position: absolute;
     top: 12px;
     left: 75px;
-    z-index: 900;
+    z-index: 800;
     max-height: 0;
     overflow: hidden;
     white-space: nowrap;
     padding: 15px;
     opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
     border-radius: 20px;
     border: 0px solid #513888;
     transition: 
@@ -237,7 +239,7 @@
     position: absolute;
     top: 12px;
     left: 75px;
-    z-index: 10000;
+    z-index: 800;
     max-height: 100vh;
     display: flex;
     flex-direction: column;

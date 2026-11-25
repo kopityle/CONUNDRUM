@@ -27,6 +27,7 @@ const WordSoupBoard = ({ grid = [], words = [], onAttempt, onComplete, onWordFou
 
     const selectionRef = useRef([]);
     const isSelectingRef = useRef(false);
+    const keyboardSelectingRef = useRef(false);
     const directionRef = useRef(null);
     const foundWordsRef = useRef(new Set());
     const completedRef = useRef(false);
@@ -43,6 +44,7 @@ const WordSoupBoard = ({ grid = [], words = [], onAttempt, onComplete, onWordFou
     const reset = useCallback(() => {
         selectionRef.current = [];
         isSelectingRef.current = false;
+        keyboardSelectingRef.current = false;
         directionRef.current = null;
         foundWordsRef.current = new Set();
         completedRef.current = false;
@@ -172,6 +174,53 @@ const WordSoupBoard = ({ grid = [], words = [], onAttempt, onComplete, onWordFou
         document.body.style.overflow = '';
     }, [expectedWords, foundKeys, onAttempt, onComplete, onWordFound]);
 
+    // Клавиатура: Enter/Space начинает и завершает выбор, стрелки продолжают его.
+    const handleCellKeyDown = useCallback((event, cell) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            if (keyboardSelectingRef.current) {
+                keyboardSelectingRef.current = false;
+                endSelection();
+            } else {
+                keyboardSelectingRef.current = true;
+                startSelection(cell);
+            }
+            return;
+        }
+        if (event.key === 'Escape') {
+            keyboardSelectingRef.current = false;
+            isSelectingRef.current = false;
+            selectionRef.current = [];
+            directionRef.current = null;
+            setSelectedKeys([]);
+            document.body.style.overflow = '';
+            return;
+        }
+        if (!keyboardSelectingRef.current) return;
+
+        const steps = {
+            ArrowLeft: [0, -1],
+            ArrowRight: [0, 1],
+            ArrowUp: [-1, 0],
+            ArrowDown: [1, 0],
+        };
+        const step = steps[event.key];
+        if (!step) return;
+        event.preventDefault();
+
+        const row = cell.row + step[0];
+        const col = cell.col + step[1];
+        const target = document.querySelector(`[data-cell-key="${cellKey(row, col)}"]`);
+        if (!target) return;
+        target.focus();
+        continueSelection({
+            row,
+            col,
+            key: target.dataset.cellKey,
+            letter: target.dataset.letter,
+        });
+    }, [continueSelection, endSelection, startSelection]);
+
     useEffect(() => {
         const handleDocumentTouchMove = (event) => {
             if (!isSelectingRef.current || !event.touches?.length) return;
@@ -237,6 +286,9 @@ const WordSoupBoard = ({ grid = [], words = [], onAttempt, onComplete, onWordFou
                                         data-cell-key={key}
                                         data-letter={letter}
                                         aria-label={`Буква ${rowIndex + 1}, ${colIndex + 1}: ${letter}`}
+                                        role='button'
+                                        tabIndex={0}
+                                        onKeyDown={(event) => handleCellKeyDown(event, cell)}
                                         onMouseDown={() => startSelection(cell)}
                                         onMouseOver={() => continueSelection(cell)}
                                         onTouchStart={() => startSelection(cell)}

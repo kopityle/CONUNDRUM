@@ -24,6 +24,7 @@ const GameMenu = ({
     handleShare,
     handleDownloadPdf,
     isLoading,
+    isReadOnly = false,
     toggleFormCreatingPuzzle,
     isFormCreatingPuzzle
 }) => {
@@ -40,6 +41,8 @@ const GameMenu = ({
         <section className={`game-menu-sidebar ${open ? "open" : "closed"}`}>
             <button 
                 className='game-menu-toggle-button'
+                aria-label={isFormCreatingPuzzle ? 'Скрыть меню' : 'Показать меню'}
+                title={isFormCreatingPuzzle ? 'Скрыть меню' : 'Показать меню'}
                 onClick={() => {
                     if (isFormCreatingPuzzle) {
                         setOpen(!open);
@@ -54,18 +57,20 @@ const GameMenu = ({
             </button>
             <div className="game-menu-content">
                 {!isLTI && (
-                    <button className='game-menu-profile-button' onClick={profileOnClick}>
+                    <button className='game-menu-profile-button' onClick={profileOnClick} aria-label={isAuth ? 'Личный кабинет' : 'Войти'} title={isAuth ? 'Личный кабинет' : 'Войти'}>
                         <ProfileIcon />
                     </button>
                 )}
                 <button 
                     className={`open-game-form-button ${isFormCreatingPuzzle ? 'clicked' : ''}`}
+                    aria-label={isFormCreatingPuzzle ? 'Скрыть форму создания' : 'Открыть форму создания'}
+                    title={isFormCreatingPuzzle ? 'Скрыть форму создания' : 'Открыть форму создания'}
                     onClick={toggleFormCreatingPuzzle}>
                     <PuzzleCreatorIcon />
                 </button>
                 <ThemeChanger isBlackTheme={isBlackTheme} toggleTheme={toggleTheme}/>
                 
-                {isCurrentGameData && !isEditing && (
+                {isCurrentGameData && !isEditing && !isReadOnly && (
                     <>
                     {isCurrentGameData.gameType !== 'rebus' && (
                         <button

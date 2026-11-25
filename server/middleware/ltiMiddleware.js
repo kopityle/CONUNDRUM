@@ -1,11 +1,26 @@
 require('dotenv').config();
 const crypto = require('crypto');
 
+const INSTRUCTOR_ROLES = [
+    'instructor',
+    'teacher',
+    'administrator',
+    'contentdeveloper',
+    'teachingassistant',
+];
+
+function isLtiInstructor(roles) {
+    const normalized = String(roles || '').toLowerCase();
+    return INSTRUCTOR_ROLES.some((role) => normalized.includes(role));
+}
+
 const initializeLTI = () => {
     // Функция для проверки подписи LTI запроса
     const validateLTIRequest = (req, res, next) => {
         // Получаем подпись из запроса (из body ИЛИ headers)
-        const oauthSignature = req.body.oauth_signature || req.headers['oauth_signature'];
+        const oauthSignature = req.body?.oauth_signature
+            || req.query?.oauth_signature
+            || req.headers['oauth_signature'];
         // Получаем секрет из переменных окружения
         const consumerSecret = process.env.LTI_SECRET;
 
@@ -15,8 +30,6 @@ const initializeLTI = () => {
         }
 
         if (!oauthSignature) {
-            console.log('Request body:', req.body); // Логируем для отладки
-            console.log('Request headers:', req.headers); // Логируем для отладки
             return res.status(401).send('Unauthorized: Missing OAuth signature');
         }
 
@@ -46,34 +59,31 @@ const initializeLTI = () => {
 
     // Функция для проверки подписи OAuth 1.0a
     const verifySignature = (req, consumerSecret) => {
-        console.log("Verifying signature...");
-
-        const oauthSignature = req.body.oauth_signature || req.headers['oauth_signature'];
-        const params = { ...req.body };
+        const oauthSignature = req.body?.oauth_signature
+            || req.query?.oauth_signature
+            || req.headers['oauth_signature'];
+        // OAuth 1.0 нормализует и параметры строки запроса, и параметры тела.
+        const params = { ...(req.query || {}), ...(req.body || {}) };
         delete params.oauth_signature;
 
-        // 1. Собираем и кодируем параметры
+        // 1. Собираем и кодируем параметры (OAuth 1.0 normalized parameters)
         const encodedParams = Object.keys(params)
             .sort()
             .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
             .join('&');
-        console.log("Encoded Params:", encodedParams);
 
-        // 2. Формируем базовую строку
-        const baseUrl = `https://${req.get('host')}/api${req.originalUrl}`;
-        console.log("Fixed Base URL for signature:", baseUrl);
+        // 2. Базовый URL должен совпадать с URL, который Moodle подписал.
+        // req.protocol учитывает X-Forwarded-Proto (trust proxy в server.js),
+        // а originalUrl — это тот путь, на который реально пришёл launch.
+        const launchPath = req.originalUrl.split('?')[0];
+        const baseUrl = `${req.protocol}://${req.get('host')}${launchPath}`;
         const baseString = `POST&${encodeURIComponent(baseUrl)}&${encodeURIComponent(encodedParams)}`;
-        console.log("Base String:", baseString);
 
-        // 3. Формируем ключ для HMAC
-        const signingKey = `${encodeURIComponent(consumerSecret)}&`; 
-
-        // 4. Генерируем подпись
+        // 3. HMAC-SHA1 с пустым token secret (LTI 1.1)
+        const signingKey = `${encodeURIComponent(consumerSecret)}&`;
         const hash = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
-        console.log("Calculated Hash:", hash);
-        console.log("OAuth Signature:", oauthSignature);
 
-        // 5. Сравниваем подписи безопасно (если возможно)
+        // 4. Сравниваем подписи безопасно (если возможно)
         try {
             return crypto.timingSafeEqual(Buffer.from(hash, 'base64'), Buffer.from(oauthSignature, 'base64'));
         } catch (e) {
@@ -87,4 +97,4 @@ const initializeLTI = () => {
     };
 };
 
-module.exports = { initializeLTI };
+module.exports = { initializeLTI, isLtiInstructor };

@@ -26,6 +26,9 @@ const PublicPlayPage = () => {
     if (!trackerRef.current) trackerRef.current = new ActivityTracker();
     const submittedRef = useRef(false);
     const pendingSubmissionRef = useRef(null);
+    const activeShareIdRef = useRef(shareId);
+
+    useEffect(() => { activeShareIdRef.current = shareId; }, [shareId]);
 
     useEffect(() => {
         let canceled = false;
@@ -93,11 +96,15 @@ const PublicPlayPage = () => {
         setSubmitFailed(false);
         try {
             await submitAttempt(shareId, submission);
-            pendingSubmissionRef.current = null;
+            if (activeShareIdRef.current === shareId) pendingSubmissionRef.current = null;
         } catch (error) {
+            if (activeShareIdRef.current !== shareId) return;
             setSubmitFailed(true);
             notifyError(error.message || 'Не удалось сохранить результат.');
         }
+
+        // Пока запрос шёл, пользователь мог открыть другой пазл.
+        if (activeShareIdRef.current !== shareId) return;
 
         setResult({
             studentName: finalName,

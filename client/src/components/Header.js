@@ -41,16 +41,16 @@ const Header = ({ isAuth, isBlackTheme, toggleTheme }) => {
 
   return (
     <header className='main-page-header'>
-      <button className='go-main-page-button' onClick={() => navigate('/')}>
+      <button className='go-main-page-button' onClick={() => navigate('/')} aria-label='На главную' title='На главную'>
         <HomeIcon />
       </button>
       <button className={`about-button ${isAboutVisible ? 'pressed' : ''}`} onClick={toggleAboutPopup}>О проекте</button>
       <button className={`manual-button ${isManualVisible ? 'pressed' : ''}`} onClick={toggleManualPopup}>Инструкция</button>
       <div className='functional-buttons-wrapper'>
-        <button className='start-button' onClick={startOnClick}>
+        <button className='start-button' onClick={startOnClick} aria-label='Начать' title='Начать'>
           <StartIcon />
         </button> 
-        <button className='go-to-profile-button-if-logged-in' onClick={profileOnClick}>
+        <button className='go-to-profile-button-if-logged-in' onClick={profileOnClick} aria-label={isAuth ? 'Личный кабинет' : 'Войти'} title={isAuth ? 'Личный кабинет' : 'Войти'}>
           <ProfileIcon />
         </button>
         <ThemeChanger isBlackTheme={isBlackTheme} toggleTheme={toggleTheme}/>

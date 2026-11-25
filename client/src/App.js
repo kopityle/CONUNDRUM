@@ -13,6 +13,7 @@ const AppContent = () => {
         return saved ? saved === "black" : true;
     });
     const [user, setUser] = useState(null);
+    const [isAuthResolved, setIsAuthResolved] = useState(false);
 
     const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
     const isLTI = searchParams.get('lti') === 'true';
@@ -36,7 +37,10 @@ const AppContent = () => {
             if (tokenFromQuery) setToken(tokenFromQuery);
 
             // No token - stay a guest immediately, without a blocking loader.
-            if (!tokenFromQuery && !getToken()) return;
+            if (!tokenFromQuery && !getToken()) {
+                if (mounted) setIsAuthResolved(true);
+                return;
+            }
 
             try {
                 const currentUser = await getMe();
@@ -44,6 +48,8 @@ const AppContent = () => {
             } catch (error) {
                 console.error('App.js: Failed to restore session:', error);
                 if (mounted) setUser(null);
+            } finally {
+                if (mounted) setIsAuthResolved(true);
             }
         };
 
@@ -69,6 +75,7 @@ const AppContent = () => {
                     toggleTheme={toggleTheme}
                     user={user}
                     isAuth={!!user}
+                    isAuthResolved={isAuthResolved}
                     ltiUserId={ltiUserId || user?.id}
                 />
             </div>
@@ -86,6 +93,7 @@ const AppContent = () => {
                         toggleTheme={toggleTheme}
                         user={user}
                         isAuth={!!user}
+                        isAuthResolved={isAuthResolved}
                         ltiUserId={ltiUserId || (isLTI ? user?.id : undefined)}
                     />
                 } />

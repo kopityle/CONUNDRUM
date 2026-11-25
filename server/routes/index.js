@@ -11,6 +11,13 @@ const { createAuthMiddleware } = require('../middleware/authMiddleware');
 const db = initDatabase();
 const { requireAuth, optionalAuth } = createAuthMiddleware({ db });
 
+// Ученик LTI авторизован так же, как преподаватель, но не должен менять
+// конфигурацию задания — иначе он может подменить текст/тему для всего курса.
+function requireLtiInstructor(req, res, next) {
+    if (!req.auth?.lti || req.auth.ltiRole === 'instructor') return next();
+    return res.status(403).json({ error: 'Only the LTI instructor can change the task settings.' });
+}
+
 // Лимит совпадает с FileManager и с проверкой на клиенте (10 МБ)
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -44,7 +51,7 @@ router.post('/play/:shareId/attempt', PuzzleController.createAttempt);
 
 // LTI generation config
 router.get('/lti/config/:resourceLinkId', requireAuth, PuzzleController.getLtiConfig);
-router.put('/lti/config/:resourceLinkId', requireAuth, PuzzleController.putLtiConfig);
+router.put('/lti/config/:resourceLinkId', requireAuth, requireLtiInstructor, PuzzleController.putLtiConfig);
 
 // Multer может отклонить файл до контроллера — отдаём понятный JSON вместо HTML-ошибки
 router.use((err, req, res, next) => {
