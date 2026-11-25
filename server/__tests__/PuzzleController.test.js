@@ -27,10 +27,10 @@ describe('PuzzleController', () => {
     let controller;
     let user;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         db = createDatabase(':memory:');
         controller = createPuzzleController({ db });
-        user = createUserRepository({ db }).create({
+        user = await createUserRepository({ db }).create({
             id: crypto.randomUUID(),
             email: `owner-${crypto.randomUUID()}@example.com`,
             password_hash: 'hash',
@@ -85,7 +85,7 @@ describe('PuzzleController', () => {
         expect(attemptRes.statusCode).toBe(201);
 
         const res = makeRes();
-        controller.list(makeReq({}, user), res);
+        await controller.list(makeReq({}, user), res);
 
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveLength(1);
@@ -101,28 +101,28 @@ describe('PuzzleController', () => {
         const puzzle = await createOwnedPuzzle();
 
         const getRes = makeRes();
-        controller.get(makeReq({}, user, { id: puzzle.id }), getRes);
+        await controller.get(makeReq({}, user, { id: puzzle.id }), getRes);
         expect(getRes.body.id).toBe(puzzle.id);
 
         const updateRes = makeRes();
-        controller.update(makeReq({ name: 'Renamed puzzle', tags: ['updated'] }, user, { id: puzzle.id }), updateRes);
+        await controller.update(makeReq({ name: 'Renamed puzzle', tags: ['updated'] }, user, { id: puzzle.id }), updateRes);
         expect(updateRes.statusCode).toBe(200);
         expect(updateRes.body.name).toBe('Renamed puzzle');
         expect(updateRes.body.tags).toEqual(['updated']);
         expect(updateRes.body.share_id).toBe(puzzle.share_id);
 
-        const otherUser = createUserRepository({ db }).create({
+        const otherUser = await createUserRepository({ db }).create({
             id: crypto.randomUUID(),
             email: `other-${crypto.randomUUID()}@example.com`,
             password_hash: 'hash',
             username: 'other'
         });
         const forbiddenRes = makeRes();
-        controller.get(makeReq({}, otherUser, { id: puzzle.id }), forbiddenRes);
+        await controller.get(makeReq({}, otherUser, { id: puzzle.id }), forbiddenRes);
         expect(forbiddenRes.statusCode).toBe(404);
 
         const deleteRes = makeRes();
-        controller.delete(makeReq({}, user, { id: puzzle.id }), deleteRes);
+        await controller.delete(makeReq({}, user, { id: puzzle.id }), deleteRes);
         expect(deleteRes.statusCode).toBe(200);
         expect(deleteRes.body).toEqual({ success: true });
         expect(db.prepare('SELECT id FROM puzzles WHERE id = ?').get(puzzle.id)).toBeUndefined();
@@ -142,7 +142,7 @@ describe('PuzzleController', () => {
         }
 
         const res = makeRes();
-        controller.analytics(makeReq({}, user, { id: puzzle.id }), res);
+        await controller.analytics(makeReq({}, user, { id: puzzle.id }), res);
 
         expect(res.statusCode).toBe(200);
         expect(res.body.attemptCount).toBe(3);
@@ -162,7 +162,7 @@ describe('PuzzleController', () => {
         const puzzle = await createOwnedPuzzle();
 
         const getRes = makeRes();
-        controller.getPublicPuzzle(makeReq({}, null, { shareId: puzzle.share_id }), getRes);
+        await controller.getPublicPuzzle(makeReq({}, null, { shareId: puzzle.share_id }), getRes);
 
         expect(getRes.statusCode).toBe(200);
         expect(getRes.body).toEqual(expect.objectContaining({

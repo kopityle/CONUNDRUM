@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
+const { createClient } = require('@libsql/client');
+const { fromLibsql } = require('./asyncDb');
 
 const DEFAULT_FILENAME = path.join(__dirname, '..', 'data', 'conundrum.db');
 
@@ -52,6 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_puzzle_attempts_puzzle_id ON puzzle_attempts(puzz
 `;
 
 let database = null;
+let initialization = null;
 
 function resolveFilename(filename) {
     if (!filename || filename === ':memory:') return filename || DEFAULT_FILENAME;
@@ -59,6 +62,9 @@ function resolveFilename(filename) {
     return path.resolve(filename);
 }
 
+// Локальный SQLite остаётся для разработки и тестов. Для продакшена
+// достаточно задать TURSO_DATABASE_URL (или DATABASE_URL с libsql/https),
+// чтобы данные не исчезали при рестарте контейнера.
 function createDatabase(filename = DEFAULT_FILENAME) {
     const resolved = resolveFilename(filename);
     if (resolved !== ':memory:') {
@@ -72,26 +78,65 @@ function createDatabase(filename = DEFAULT_FILENAME) {
     return db;
 }
 
+function remoteConfig() {
+    const url = String(process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || '').trim();
+    if (!/^(libsql|https?):\/\//.test(url)) return null;
+    return {
+        url,
+        authToken: process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN
+    };
+}
+
+function isRemoteDatabase() {
+    return Boolean(remoteConfig());
+}
+
+async function createRemoteDatabase(config) {
+    const client = createClient({ url: config.url, authToken: config.authToken });
+    const db = fromLibsql(client);
+    await db.exec(SCHEMA);
+    return db;
+}
+
 function getDatabase() {
     return database;
 }
 
-function initDatabase() {
-    if (!database) database = createDatabase(process.env.DB_PATH || DEFAULT_FILENAME);
+async function getDatabaseAsync() {
+    if (!database) await initDatabase();
     return database;
 }
 
-function closeDatabase() {
-    if (database) {
-        database.close();
-        database = null;
+async function initDatabase() {
+    if (database) return database;
+    if (!initialization) {
+        const remote = remoteConfig();
+        initialization = remote
+            ? createRemoteDatabase(remote)
+            : Promise.resolve(createDatabase(process.env.DB_PATH || DEFAULT_FILENAME));
     }
+    try {
+        database = await initialization;
+        return database;
+    } catch (error) {
+        initialization = null;
+        throw error;
+    }
+}
+
+function closeDatabase() {
+    if (database) database.close();
+    database = null;
+    initialization = null;
 }
 
 module.exports = {
     createDatabase,
     getDatabase,
+    getDatabaseAsync,
     initDatabase,
+    isRemoteDatabase,
     closeDatabase,
-    DEFAULT_FILENAME
+    DEFAULT_FILENAME,
+    SCHEMA
 };

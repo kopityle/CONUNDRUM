@@ -11,12 +11,10 @@ const { validateLTIRequest } = initializeLTI();
 const { sendGradeToMoodle } = require('./services/ltiService');
 const { generateGamePdf } = require('./services/pdfGeneratorService');
 const { clientUrl } = require('./utils/clientUrl');
-const { initDatabase, getDatabase } = require('./db/database');
+const { initDatabase, getDatabaseAsync } = require('./db/database');
 const { createUserRepository } = require('./db/userRepository');
 const { issueToken, verifyToken, extractToken } = require('./utils/authToken');
 const apiRoutes = require('./routes');
-
-initDatabase();
 
 const app = express();
 
@@ -108,8 +106,8 @@ app.post('/lti/launch', validateLTIRequest, async (req, res) => {
 
         const email = ltiSession.lis_person_contact_email_primary || `lti-${ltiUserId}@local`;
         const username = ltiSession.lis_person_name_full || `LTI ${ltiUserId}`;
-        const users = createUserRepository({ db: getDatabase() });
-        const user = users.upsertLtiUser({
+        const users = createUserRepository({ db: await getDatabaseAsync() });
+        const user = await users.upsertLtiUser({
             email,
             username,
             password_hash: bcrypt.hashSync(crypto.randomBytes(24).toString('hex'), 10)
@@ -160,5 +158,10 @@ module.exports = app;
 module.exports.app = app;
 
 if (require.main === module) {
-    app.listen(process.env.PORT || 5000, () => console.log('Server started'));
+    initDatabase()
+        .then(() => app.listen(process.env.PORT || 5000, () => console.log('Server started')))
+        .catch((error) => {
+            console.error('Не удалось подключиться к базе данных:', error);
+            process.exit(1);
+        });
 }

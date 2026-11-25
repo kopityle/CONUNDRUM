@@ -49,9 +49,20 @@
 
 ## База данных
 
-Файл создаётся автоматически при первом запуске: `server/data/conundrum.db`. Включены `journal_mode = WAL` и `foreign_keys = ON`. Таблицы: `users`, `puzzles`, `puzzle_attempts`, `lti_configurations`. Путь можно переопределить переменной `DB_PATH`.
+По умолчанию используется локальный SQLite: файл создаётся автоматически при первом запуске (`server/data/conundrum.db`, включается `journal_mode = WAL` и `foreign_keys = ON`), путь можно переопределить переменной `DB_PATH`. Таблицы: `users`, `puzzles`, `puzzle_attempts`, `lti_configurations`.
 
-> **Важно для Render и других контейнеров с ephemeral FS:** файл внутри образа живёт только до рестарта/редеплоя. После рестарта пользователи и пазлы исчезают, а старые токены в браузере дают `401 Unauthorized`. Для рабочего деплоя подключите Persistent Disk и задайте `DB_PATH` на точку монтирования (например, `/data/conundrum.db`), либо используйте внешнюю БД. Клиент при `401 Unauthorized` очищает токен и предлагает войти заново, но уже сохранённые данные без постоянного хранилища не восстанавливаются.
+> **Важно для Render и других контейнеров с ephemeral FS:** файл внутри образа живёт только до рестарта/редеплоя. После рестарта пользователи и пазлы исчезают, а старые токены в браузере дают `401 Unauthorized`. Для рабочего деплоя используйте внешнюю базу. Клиент при `401 Unauthorized` очищает токен и предлагает войти заново, но уже потерянные данные без постоянного хранилища не восстанавливаются.
+
+### Внешняя база (libSQL / Turso)
+
+Задайте `TURSO_DATABASE_URL` (или `DATABASE_URL` с префиксом `libsql://`/`https://`) и `TURSO_AUTH_TOKEN`. Сервер подключится через `@libsql/client`, создаст таблицы при старте и будет работать с тем же SQL, что и локальный SQLite. Локальный режим включается, когда этих переменных нет.
+
+1. Создайте базу в Turso: `turso db create conundrum`.
+2. Получите URL и токен: `turso db show conundrum --url`, `turso db tokens create conundrum`.
+3. Пропишите `TURSO_DATABASE_URL=libsql://...` и `TURSO_AUTH_TOKEN=...` в переменных окружения Render (и/или в `server/.env` для локального запуска).
+4. Перезапустите сервер — схема применится автоматически.
+
+Подойдёт и любой совместимый с libSQL хостинг, доступный по `https://`. Токен и URL должны быть именно у сервера: в клиент они не попадают.
 
 ## Переменные окружения
 
@@ -77,7 +88,11 @@ ALLOWED_ORIGINS=http://localhost
 SESSION_SECRET=<strong-session-secret>
 JWT_SECRET=<optional-jwt-secret>          # если не задан — используется SESSION_SECRET
 CLIENT_URL=http://localhost
-DB_PATH=/app/data/conundrum.db             # опционально, по умолчанию server/data/conundrum.db
+DB_PATH=/app/data/conundrum.db             # опционально, локальный режим
+
+# Внешняя БД (включается вместо DB_PATH, если задан сетевой URL)
+TURSO_DATABASE_URL=libsql://<db>.turso.io
+TURSO_AUTH_TOKEN=<turso-token>
 
 # LTI 1.1
 LTI_KEY=<lti-consumer-key>

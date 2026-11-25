@@ -42,12 +42,12 @@ describe('SQLite database', () => {
         }
     });
 
-    test('stores and reads users and puzzles', () => {
+    test('stores and reads users and puzzles', async () => {
         memoryDb = createDatabase(':memory:');
         const users = createUserRepository({ db: memoryDb });
         const puzzles = createPuzzleRepository({ db: memoryDb });
 
-        const user = users.create({
+        const user = await users.create({
             id: crypto.randomUUID(),
             email: `user-${crypto.randomUUID()}@example.com`,
             password_hash: 'hashed-password',
@@ -55,10 +55,10 @@ describe('SQLite database', () => {
             occupation: 'teacher',
             gender: 'female'
         });
-        expect(users.findById(user.id).email).toBe(user.email);
-        expect(users.findByEmail(user.email).id).toBe(user.id);
+        expect((await users.findById(user.id)).email).toBe(user.email);
+        expect((await users.findByEmail(user.email)).id).toBe(user.id);
 
-        const puzzle = puzzles.create({
+        const puzzle = await puzzles.create({
             user_id: user.id,
             share_id: 'abc123',
             name: 'Vocabulary crossword',
@@ -66,8 +66,8 @@ describe('SQLite database', () => {
             game_data: { words: ['alpha'] },
             tags: ['vocabulary']
         });
-        expect(puzzles.findById(puzzle.id).name).toBe('Vocabulary crossword');
-        expect(puzzles.findByShareId('abc123').id).toBe(puzzle.id);
-        expect(puzzles.listByUser(user.id)).toHaveLength(1);
+        expect((await puzzles.findById(puzzle.id)).name).toBe('Vocabulary crossword');
+        expect((await puzzles.findByShareId('abc123')).id).toBe(puzzle.id);
+        expect(await puzzles.listByUser(user.id)).toHaveLength(1);
     });
 });

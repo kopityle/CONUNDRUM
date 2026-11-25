@@ -102,11 +102,11 @@ describe('AuthController', () => {
 
         const req = makeReq({}, { authorization: `Bearer ${registerRes.body.token}` });
         const next = jest.fn();
-        auth.requireAuth(req, makeRes(), next);
+        await auth.requireAuth(req, makeRes(), next);
         expect(next).toHaveBeenCalledTimes(1);
 
         const res = makeRes();
-        controller.me(req, res);
+        await controller.me(req, res);
         expect(res.statusCode).toBe(200);
         expect(res.body.user.email).toBe(body.email);
     });
@@ -119,7 +119,7 @@ describe('AuthController', () => {
         const req = makeReq({}, {});
         req.cookies = { conundrum_token: registerRes.body.token };
         const res = makeRes();
-        controller.me(req, res);
+        await controller.me(req, res);
 
         expect(res.statusCode).toBe(200);
         expect(res.body.user.id).toBe(registerRes.body.user.id);
@@ -134,7 +134,7 @@ describe('AuthController', () => {
             authorization: `Bearer ${registerRes.body.token}`
         });
         const res = makeRes();
-        controller.profile(req, res);
+        await controller.profile(req, res);
 
         expect(res.statusCode).toBe(200);
         expect(res.body.user.username).toBe('Updated Teacher');

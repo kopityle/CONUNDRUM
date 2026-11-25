@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
-const { getDatabase, initDatabase } = require('../db/database');
+const { getDatabaseAsync } = require('../db/database');
 const { createPuzzleRepository } = require('../db/puzzleRepository');
 
 function decodeJson(raw, fallback) {
@@ -48,20 +48,20 @@ function isFilledString(value) {
 }
 
 function createPuzzleController(options = {}) {
-    const resolveDb = () => options.db || getDatabase() || initDatabase();
-    const repo = () => createPuzzleRepository({ db: resolveDb() });
+    const resolveDb = async () => options.db || await getDatabaseAsync();
+    const repo = async () => createPuzzleRepository({ db: await resolveDb() });
 
-    function generateShareId(puzzles) {
+    async function generateShareId(puzzles) {
         for (let attempt = 0; attempt < 12; attempt += 1) {
             const shareId = crypto.randomBytes(6).toString('base64url');
-            if (!puzzles.findByShareId(shareId)) return shareId;
+            if (!(await puzzles.findByShareId(shareId))) return shareId;
         }
         // Extremely unlikely, but keep the 6-8 character contract even on collisions.
         return crypto.randomBytes(5).toString('base64url');
     }
 
-    function ownedPuzzle(req, res) {
-        const puzzle = repo().findById(req.params.id);
+    async function ownedPuzzle(req, res) {
+        const puzzle = await (await repo()).findById(req.params.id);
         if (!puzzle || !req.user || puzzle.user_id !== req.user.id) {
             res.status(404).json({ error: 'Puzzle not found' });
             return null;
@@ -70,12 +70,13 @@ function createPuzzleController(options = {}) {
     }
 
     return {
-        list(req, res) {
-            const puzzles = repo().listByUser(req.user.id).map((row) => formatPuzzle(row, true));
+        async list(req, res) {
+            const puzzles = (await (await repo()).listByUser(req.user.id))
+                .map((row) => formatPuzzle(row, true));
             return res.status(200).json(puzzles);
         },
 
-        create(req, res) {
+        async create(req, res) {
             try {
                 const body = req.body || {};
                 if (!isFilledString(body.name)) {
@@ -88,10 +89,10 @@ function createPuzzleController(options = {}) {
                     return res.status(400).json({ error: 'Game data is required' });
                 }
 
-                const puzzles = repo();
-                const created = puzzles.create({
+                const puzzles = await repo();
+                const created = await puzzles.create({
                     user_id: req.user?.id || null,
-                    share_id: generateShareId(puzzles),
+                    share_id: await generateShareId(puzzles),
                     name: String(body.name).trim(),
                     game_type: String(body.game_type).trim(),
                     game_data: body.game_data,
@@ -104,14 +105,14 @@ function createPuzzleController(options = {}) {
             }
         },
 
-        get(req, res) {
-            const puzzle = ownedPuzzle(req, res);
+        async get(req, res) {
+            const puzzle = await ownedPuzzle(req, res);
             if (!puzzle) return undefined;
             return res.status(200).json(formatPuzzle(puzzle));
         },
 
-        update(req, res) {
-            const puzzle = ownedPuzzle(req, res);
+        async update(req, res) {
+            const puzzle = await ownedPuzzle(req, res);
             if (!puzzle) return undefined;
 
             const body = req.body || {};
@@ -134,24 +135,24 @@ function createPuzzleController(options = {}) {
                 changes.tags = body.tags === undefined || body.tags === null ? [] : body.tags;
             }
 
-            const updated = repo().update(puzzle.id, changes);
+            const updated = await (await repo()).update(puzzle.id, changes);
             return res.status(200).json(formatPuzzle(updated));
         },
 
-        delete(req, res) {
-            const puzzle = ownedPuzzle(req, res);
+        async delete(req, res) {
+            const puzzle = await ownedPuzzle(req, res);
             if (!puzzle) return undefined;
-            repo().delete(puzzle.id);
+            await (await repo()).delete(puzzle.id);
             return res.status(200).json({ success: true });
         },
 
-        analytics(req, res) {
-            const puzzle = ownedPuzzle(req, res);
+        async analytics(req, res) {
+            const puzzle = await ownedPuzzle(req, res);
             if (!puzzle) return undefined;
 
-            const puzzles = repo();
-            const summary = puzzles.getAnalyticsSummary(puzzle.id);
-            const attempts = puzzles.getAttempts(puzzle.id).map((attempt) => ({
+            const puzzles = await repo();
+            const summary = await puzzles.getAnalyticsSummary(puzzle.id);
+            const attempts = (await puzzles.getAttempts(puzzle.id)).map((attempt) => ({
                 id: attempt.id,
                 student_name: attempt.student_name,
                 score: Number(attempt.score) || 0,
@@ -180,8 +181,8 @@ function createPuzzleController(options = {}) {
             });
         },
 
-        getPublicPuzzle(req, res) {
-            const puzzle = repo().findByShareId(req.params.shareId);
+        async getPublicPuzzle(req, res) {
+            const puzzle = await (await repo()).findByShareId(req.params.shareId);
             if (!puzzle) return res.status(404).json({ error: 'Puzzle not found' });
             return res.status(200).json({
                 id: puzzle.id,
@@ -192,9 +193,9 @@ function createPuzzleController(options = {}) {
             });
         },
 
-        createAttempt(req, res) {
+        async createAttempt(req, res) {
             try {
-                const puzzle = repo().findByShareId(req.params.shareId);
+                const puzzle = await (await repo()).findByShareId(req.params.shareId);
                 if (!puzzle) return res.status(404).json({ error: 'Puzzle not found' });
 
                 const body = req.body || {};
@@ -212,7 +213,7 @@ function createPuzzleController(options = {}) {
                 }
 
                 const wrongWords = asWordList(body.wrong_words);
-                const attempt = repo().addAttempt({
+                const attempt = await (await repo()).addAttempt({
                     puzzle_id: puzzle.id,
                     student_name: String(body.student_name).trim(),
                     score,
@@ -233,14 +234,14 @@ function createPuzzleController(options = {}) {
             }
         },
 
-        getLtiConfig(req, res) {
-            const config = repo().getLtiConfig(req.params.resourceLinkId);
+        async getLtiConfig(req, res) {
+            const config = await (await repo()).getLtiConfig(req.params.resourceLinkId);
             return res.status(200).json({
                 generation_params: config ? decodeJson(config.generation_params, null) : null
             });
         },
 
-        putLtiConfig(req, res) {
+        async putLtiConfig(req, res) {
             const body = req.body || {};
             if (body.generationParams === undefined) {
                 return res.status(400).json({ error: 'generationParams is required' });
@@ -248,7 +249,7 @@ function createPuzzleController(options = {}) {
             const params = typeof body.generationParams === 'string'
                 ? decodeJson(body.generationParams, {})
                 : body.generationParams;
-            repo().upsertLtiConfig(req.params.resourceLinkId, params, req.user?.id || null);
+            await (await repo()).upsertLtiConfig(req.params.resourceLinkId, params, req.user?.id || null);
             return res.status(200).json({ success: true });
         }
     };

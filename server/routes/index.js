@@ -5,11 +5,11 @@ const { MAX_FILE_SIZE_BYTES } = require('../utils/fileLimits');
 const GameController = require('../controllers/GameController');
 const AuthController = require('../controllers/AuthController');
 const PuzzleController = require('../controllers/PuzzleController');
-const { initDatabase } = require('../db/database');
 const { createAuthMiddleware } = require('../middleware/authMiddleware');
 
-const db = initDatabase();
-const { requireAuth, optionalAuth } = createAuthMiddleware({ db });
+// База инициализируется асинхронно (локальный SQLite или внешний libSQL),
+// поэтому middleware получает её при первом запросе.
+const { requireAuth, optionalAuth } = createAuthMiddleware();
 
 // Ученик LTI авторизован так же, как преподаватель, но не должен менять
 // конфигурацию задания — иначе он может подменить текст/тему для всего курса.

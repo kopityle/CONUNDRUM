@@ -1,18 +1,18 @@
 'use strict';
 
-const { getDatabase, initDatabase } = require('../db/database');
+const { getDatabaseAsync } = require('../db/database');
 const { createUserRepository } = require('../db/userRepository');
 const { extractToken, verifyToken } = require('../utils/authToken');
 
 function createAuthMiddleware(options = {}) {
-    const resolveDb = () => options.db || getDatabase() || initDatabase();
+    const resolveDb = async () => options.db || await getDatabaseAsync();
 
-    function authenticate(req, required) {
+    async function authenticate(req, required) {
         const payload = verifyToken(extractToken(req));
         if (!payload || !payload.sub) {
             return required ? { error: 'Unauthorized' } : null;
         }
-        const user = createUserRepository({ db: resolveDb() }).findById(payload.sub);
+        const user = await createUserRepository({ db: await resolveDb() }).findById(payload.sub);
         if (!user) {
             return required ? { error: 'Unauthorized' } : null;
         }
@@ -22,23 +22,31 @@ function createAuthMiddleware(options = {}) {
     }
 
     return {
-        requireAuth(req, res, next) {
-            const result = authenticate(req, true);
-            if (result.error) return res.status(401).json({ error: result.error });
-            return next();
+        async requireAuth(req, res, next) {
+            try {
+                const result = await authenticate(req, true);
+                if (result.error) return res.status(401).json({ error: result.error });
+                return next();
+            } catch (error) {
+                return next(error);
+            }
         },
-        optionalAuth(req, res, next) {
-            authenticate(req, false);
-            return next();
+        async optionalAuth(req, res, next) {
+            try {
+                await authenticate(req, false);
+                return next();
+            } catch (error) {
+                return next(error);
+            }
         }
     };
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
     return createAuthMiddleware().requireAuth(req, res, next);
 }
 
-function optionalAuth(req, res, next) {
+async function optionalAuth(req, res, next) {
     return createAuthMiddleware().optionalAuth(req, res, next);
 }
 

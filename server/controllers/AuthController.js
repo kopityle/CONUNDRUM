@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const { getDatabase, initDatabase } = require('../db/database');
+const { getDatabaseAsync } = require('../db/database');
 const { createUserRepository } = require('../db/userRepository');
 const { extractToken, verifyToken, issueToken, setTokenCookie, clearTokenCookie } = require('../utils/authToken');
 
@@ -23,13 +23,13 @@ function isFilledString(value) {
 }
 
 function createAuthController(options = {}) {
-    const resolveDb = () => options.db || getDatabase() || initDatabase();
+    const resolveDb = async () => options.db || await getDatabaseAsync();
 
-    function authenticate(req) {
+    async function authenticate(req) {
         if (req.user) return req.user;
         const payload = verifyToken(extractToken(req));
         if (!payload?.sub) return null;
-        return createUserRepository({ db: resolveDb() }).findById(payload.sub);
+        return createUserRepository({ db: await resolveDb() }).findById(payload.sub);
     }
 
     return {
@@ -50,12 +50,12 @@ function createAuthController(options = {}) {
                     return res.status(400).json({ error: 'Username is required' });
                 }
 
-                const users = createUserRepository({ db: resolveDb() });
-                if (users.findByEmail(email)) {
+                const users = createUserRepository({ db: await resolveDb() });
+                if (await users.findByEmail(email)) {
                     return res.status(409).json({ error: 'Email already in use' });
                 }
 
-                const user = users.create({
+                const user = await users.create({
                     id: crypto.randomUUID(),
                     email,
                     password_hash: await bcrypt.hash(password, 10),
@@ -83,7 +83,7 @@ function createAuthController(options = {}) {
                     return res.status(400).json({ error: 'Email and password are required' });
                 }
 
-                const user = createUserRepository({ db: resolveDb() }).findByEmail(email);
+                const user = await createUserRepository({ db: await resolveDb() }).findByEmail(email);
                 if (!user || !user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
                     return res.status(401).json({ error: 'Invalid email or password' });
                 }
@@ -96,15 +96,15 @@ function createAuthController(options = {}) {
             }
         },
 
-        me(req, res) {
-            const user = authenticate(req);
+        async me(req, res) {
+            const user = await authenticate(req);
             if (!user) return res.status(401).json({ error: 'Unauthorized' });
             return res.status(200).json({ user: publicUser(user) });
         },
 
-        profile(req, res) {
+        async profile(req, res) {
             try {
-                const user = authenticate(req);
+                const user = await authenticate(req);
                 if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
                 const body = req.body || {};
@@ -126,7 +126,8 @@ function createAuthController(options = {}) {
                     changes.gender = body.gender === null ? null : String(body.gender);
                 }
 
-                const updated = createUserRepository({ db: resolveDb() }).updateProfile(user.id, changes);
+                const updated = await createUserRepository({ db: await resolveDb() })
+                    .updateProfile(user.id, changes);
                 return res.status(200).json({ user: publicUser(updated) });
             } catch (error) {
                 return res.status(500).json({ error: 'Profile update failed' });
