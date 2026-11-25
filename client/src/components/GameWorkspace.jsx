@@ -103,7 +103,7 @@ const GameWorkspace = ({
     return (
         <section id='display-game-on-screen'>
             <section id='crossword-and-clues'>
-                <div id='preloader-container' style={{ display: isLoading ? 'flex' : 'none' }}>
+                <div id='preloader-container' className='preloader-overlay' style={{ display: isLoading ? 'grid' : 'none' }}>
                     <Preloader />
                 </div>
 

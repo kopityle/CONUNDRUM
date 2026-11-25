@@ -169,7 +169,9 @@ const PublicPlayPage = () => {
                 <div className='ellipse-bg red' />
 
                 <section className='public-play-card glass-surface'>
-                    {phase === 'loading' && <Preloader />}
+                    {phase === 'loading' && (
+                        <div className='preloader-overlay'><Preloader /></div>
+                    )}
 
                     {phase === 'error' && (
                         <div className='public-play-step'>

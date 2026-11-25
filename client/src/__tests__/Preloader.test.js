@@ -10,6 +10,9 @@ describe('Preloader Component', () => {
         // Проверяем, что отрисовался SVG
         const svgElement = container.querySelector('svg');
         expect(svgElement).toBeInTheDocument();
+
+        const progress = container.querySelector('[role="progressbar"]');
+        expect(progress).toHaveAttribute('aria-label', 'Загрузка');
         
         // Можно проверить наличие анимации (если есть теги animateTransform)
         // Но достаточно просто наличия в DOM

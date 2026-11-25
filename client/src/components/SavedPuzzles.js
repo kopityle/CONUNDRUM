@@ -224,7 +224,7 @@ const SavedPuzzles = () => {
             <div className='saved-games-and-tags'>
                 <section className='user-saved-games'>
                     {isLoading
-                        ? <Preloader />
+                        ? <div className='preloader-overlay'><Preloader /></div>
                         : (
                             <ul className='saved-games-list'>
                                 {filteredPuzzles.map((puzzle, puzzleIndex) => (

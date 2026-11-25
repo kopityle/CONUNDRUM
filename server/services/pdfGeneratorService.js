@@ -238,7 +238,12 @@ function writeBlock(doc, text, x, y, maxWidth, maxHeight, options = {}) {
     const lineHeight = Math.max(10, fontSize * 1.35);
     const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
     doc.font(FONT_NAME).fontSize(fontSize);
-    const lines = truncateLines(doc, wrapLines(doc, text, maxWidth, fontSize), maxWidth, maxLines, fontSize);
+    const wrapped = wrapLines(doc, text, maxWidth, fontSize);
+    // Подсказки переносятся целиком: многоточие допускается только там,
+    // где вызывающая сторона явно просит обрезать список (например, ключи).
+    const lines = options.allowEllipsis === false
+        ? wrapped.slice(0, maxLines)
+        : truncateLines(doc, wrapped, maxWidth, maxLines, fontSize);
 
     let cursorY = y;
     lines.forEach((line) => {
@@ -617,9 +622,7 @@ function drawRebusCards(doc, gameData, imageCache, top, maxHeight, contentWidth)
 function drawItemList(doc, title, items, x, y, width, maxHeight, options = {}) {
     const fontSize = options.fontSize || 9.5;
     const columns = options.columns || 1;
-    const maxLines = options.maxLines || 1;
     const lineHeight = fontSize * 1.45;
-    const itemHeight = lineHeight * maxLines;
     let cursorY = y;
 
     if (title) {
@@ -633,8 +636,13 @@ function drawItemList(doc, title, items, x, y, width, maxHeight, options = {}) {
 
     const available = Math.max(0, maxHeight - 20);
     const columnWidth = (width - (columns > 1 ? 10 : 0)) / columns;
-    const rowsPerColumn = Math.max(1, Math.floor(available / itemHeight));
     const perColumn = Math.ceil(items.length / columns);
+    // Сколько строк можно отвести под одну подсказку: чем их меньше, тем
+    // больше строк доступно каждой, пока не кончится вертикальное место.
+    const maxLines = Math.max(1, Math.min(options.maxLines || 1,
+        Math.floor(available / Math.max(1, perColumn * lineHeight))));
+    const itemHeight = lineHeight * maxLines;
+    const rowsPerColumn = Math.max(1, Math.floor(available / itemHeight));
 
     for (let column = 0; column < columns; column++) {
         const columnX = x + column * (columnWidth + 10);
@@ -642,7 +650,10 @@ function drawItemList(doc, title, items, x, y, width, maxHeight, options = {}) {
         const limit = Math.min(columnItems.length, rowsPerColumn);
         for (let index = 0; index < limit; index++) {
             writeBlock(doc, columnItems[index], columnX, cursorY + index * itemHeight,
-                columnWidth - 4, itemHeight, { fontSize });
+                columnWidth - 4, itemHeight, {
+                    fontSize,
+                    allowEllipsis: options.allowEllipsis,
+                });
         }
         if (columnItems.length > rowsPerColumn) {
             writeLine(doc, '…', columnX, cursorY + rowsPerColumn * itemHeight, {
@@ -705,16 +716,17 @@ function drawStudentPage(doc, gameData, context) {
         const bottomLimit = doc.page.height - PAGE_MARGIN - (context.qrBuffer ? QR_RESERVED_HEIGHT : 16);
         const height = Math.max(0, bottomLimit - clueTop);
         drawItemList(doc, 'По горизонтали:', across.map((word) => `${word.position || '?'} ${wordHint(word)}`),
-            clueX, clueTop, columnWidth, height, { fontSize: 9 });
+            clueX, clueTop, columnWidth, height, { fontSize: 9, maxLines: 4, allowEllipsis: false });
         drawItemList(doc, 'По вертикали:', down.map((word) => `${word.position || '?'} ${wordHint(word)}`),
-            clueX + columnWidth + 10, clueTop, columnWidth, height, { fontSize: 9 });
+            clueX + columnWidth + 10, clueTop, columnWidth, height, { fontSize: 9, maxLines: 4, allowEllipsis: false });
     } else if (gameData.gameType === 'rebus') {
         const bottom = drawRebusCards(doc, gameData, context.imageCache, REBUS_TOP, REBUS_MAX_HEIGHT, clueWidth);
         clueTop = Math.max(clueTop, bottom + 12);
         const rebuses = (Array.isArray(gameData.rebuses) ? gameData.rebuses : []).filter(Boolean);
         const height = Math.max(0, (doc.page.height - PAGE_MARGIN - (context.qrBuffer ? QR_RESERVED_HEIGHT : 16)) - clueTop);
         drawItemList(doc, 'Подсказки:', rebuses.map((rebus, index) => `${index + 1}. ${rebusHint(rebus)}`),
-            clueX, clueTop, clueWidth, height, { fontSize: 9, columns: clueWidth > 360 ? 2 : 1 });
+            clueX, clueTop, clueWidth, height,
+            { fontSize: 9, columns: clueWidth > 360 ? 2 : 1, maxLines: 4, allowEllipsis: false });
     } else {
         const grid = normalizeGrid(gameData.grid);
         const layout = drawGrid(doc, grid, GRID_TOP, GRID_MAX_HEIGHT, {
@@ -724,7 +736,8 @@ function drawStudentPage(doc, gameData, context) {
         clueTop = Math.max(clueTop, layout.bottom + 22);
         const height = Math.max(0, (doc.page.height - PAGE_MARGIN - (context.qrBuffer ? QR_RESERVED_HEIGHT : 16)) - clueTop);
         drawItemList(doc, 'Подсказки:', words.map((word, index) => `${index + 1}. ${wordHint(word)}`),
-            clueX, clueTop, clueWidth, height, { fontSize: 9, columns: clueWidth > 360 ? 2 : 1 });
+            clueX, clueTop, clueWidth, height,
+            { fontSize: 9, columns: clueWidth > 360 ? 2 : 1, maxLines: 4, allowEllipsis: false });
     }
 
     if (context.qrBuffer) drawQrCode(doc, context.qrBuffer);

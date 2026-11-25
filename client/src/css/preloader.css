@@ -1,19 +1,16 @@
-#preloader-container {
+#preloader-container,
+.preloader-overlay {
     position: fixed;
     inset: 0;
     z-index: 900;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
 }
 
 .preloader-gear {
     width: 80px;
     height: 80px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     padding: 5px;
     border-radius: 50%;
     overflow: hidden;
@@ -77,6 +74,13 @@
     }
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Медленное вращение вместо полной остановки: статус «загрузка» остаётся видимым. */
+@media (prefers-reduced-motion: reduce) {
+    .preloader-gear svg {
+        animation-duration: 6s;
     }
 }
 

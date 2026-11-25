@@ -109,7 +109,7 @@ const PersonalAccount = ({ isBlackTheme, toggleTheme, user }) => {
                 
                     {isLoading 
                         ? 
-                            <Preloader />
+                            <div className='preloader-overlay'><Preloader /></div>
                         :
                         <section className='profile-and-games'>
                             <ProfileInfo

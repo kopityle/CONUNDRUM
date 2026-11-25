@@ -322,14 +322,15 @@ describe('generateGamePdf', () => {
         expect(registry.pages[0]).toContain('Решить онлайн');
     });
 
-    test('QR: все подсказки кроссворда печатаются на странице ученика', async () => {
+    test('QR: длинные подсказки переносятся на новую строку без многоточия', async () => {
+        const longClue = 'Очень длинная подсказка которая должна аккуратно перенестись на следующую строку и не обрываться многоточием';
         const words = [
-            { word: 'КОТ', clue: 'Подсказка раз', startx: 1, starty: 1, orientation: 'across', position: 1 },
-            { word: 'ШАР', clue: 'Подсказка два', startx: 1, starty: 3, orientation: 'across', position: 2 },
-            { word: 'ДОМ', clue: 'Подсказка три', startx: 2, starty: 2, orientation: 'across', position: 3 },
-            { word: 'ЛЕС', clue: 'Подсказка четыре', startx: 3, starty: 2, orientation: 'across', position: 4 },
-            { word: 'РЕКА', clue: 'Подсказка пять', startx: 1, starty: 1, orientation: 'down', position: 5 },
-            { word: 'ГОРА', clue: 'Подсказка шесть', startx: 2, starty: 1, orientation: 'down', position: 6 },
+            { word: 'КОТ', clue: longClue, startx: 1, starty: 1, orientation: 'across', position: 1 },
+            { word: 'ШАР', clue: longClue, startx: 1, starty: 3, orientation: 'across', position: 2 },
+            { word: 'ДОМ', clue: longClue, startx: 2, starty: 2, orientation: 'across', position: 3 },
+            { word: 'ЛЕС', clue: longClue, startx: 3, starty: 2, orientation: 'across', position: 4 },
+            { word: 'РЕКА', clue: longClue, startx: 1, starty: 1, orientation: 'down', position: 5 },
+            { word: 'ГОРА', clue: longClue, startx: 2, starty: 1, orientation: 'down', position: 6 },
         ];
         const registry = await generateWithMockedDoc({
             ...crosswordData(),
@@ -341,7 +342,10 @@ describe('generateGamePdf', () => {
 
         expect(studentPage).toContain('По горизонтали:');
         expect(studentPage).toContain('По вертикали:');
-        words.forEach((word) => expect(studentPage).toContain(word.clue));
-        expect(registry.pages[0]).not.toContain('…');
+        longClue.split(' ').forEach((part) => expect(studentPage).toContain(part));
+        expect(registry.texts.filter((entry) =>
+            entry.value.includes('длинная') || entry.value.includes('многоточием')
+        ).length).toBeGreaterThan(words.length);
+        expect(registry.pages[0].some((line) => line.includes('…'))).toBe(false);
     });
 });

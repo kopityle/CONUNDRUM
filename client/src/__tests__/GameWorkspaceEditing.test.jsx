@@ -37,4 +37,5 @@ test('edit mode keeps the board mounted and marks it as read-only', () => {
     expect(screen.getByTestId('crossword-board')).toBeInTheDocument();
     expect(screen.getByTestId('clues-panel')).toBeInTheDocument();
     expect(container.querySelector('#crossword-container')).toHaveClass('grid-disabled');
+    expect(container.querySelector('#preloader-container')).toHaveClass('preloader-overlay');
 });
