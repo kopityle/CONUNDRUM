@@ -118,10 +118,6 @@
         border-radius: 5px;
     }
 
-    .main-page-header .about-button {
-        display: none;
-    }
-
     .main-page-header .start-button,
     .main-page-header .go-to-profile-button-if-logged-in, 
     .main-page-header .theme-changer-button {
@@ -154,10 +150,6 @@
 
     .main-page-header button:not(.go-main-page-button):active {
         border-radius: 15px;
-    }
-
-    .main-page-header .about-button {
-        display: none;
     }
 
     .main-page-header .start-button,

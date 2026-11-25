@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import AboutPopup from './AboutPopup';
 import ManualPopup from './ManualPopup';
 import { useNavigate } from 'react-router-dom';
@@ -39,25 +40,36 @@ const Header = ({ isAuth, isBlackTheme, toggleTheme }) => {
   // Личный кабинет остаётся доступен только после входа.
   const profileOnClick = isAuth ? navToProfile : navToRegister;
 
+  const popupRoot = typeof document !== 'undefined'
+    ? (document.querySelector('.black-theme') || document.querySelector('.white-theme') || document.body)
+    : null;
+
   return (
-    <header className='main-page-header'>
-      <button className='go-main-page-button' onClick={() => navigate('/')} aria-label='На главную' title='На главную'>
-        <HomeIcon />
-      </button>
-      <button className={`about-button ${isAboutVisible ? 'pressed' : ''}`} onClick={toggleAboutPopup}>О проекте</button>
-      <button className={`manual-button ${isManualVisible ? 'pressed' : ''}`} onClick={toggleManualPopup}>Инструкция</button>
-      <div className='functional-buttons-wrapper'>
-        <button className='start-button' onClick={startOnClick} aria-label='Начать' title='Начать'>
-          <StartIcon />
-        </button> 
-        <button className='go-to-profile-button-if-logged-in' onClick={profileOnClick} aria-label={isAuth ? 'Личный кабинет' : 'Войти'} title={isAuth ? 'Личный кабинет' : 'Войти'}>
-          <ProfileIcon />
+    <>
+      <header className='main-page-header'>
+        <button className='go-main-page-button' onClick={() => navigate('/')} aria-label='На главную' title='На главную'>
+          <HomeIcon />
         </button>
-        <ThemeChanger isBlackTheme={isBlackTheme} toggleTheme={toggleTheme}/>
-      </div>
-      <AboutPopup isVisible={isAboutVisible}/>
-      <ManualPopup isVisible={isManualVisible}/>
-    </header>
+        <button className={`about-button ${isAboutVisible ? 'pressed' : ''}`} onClick={toggleAboutPopup}>О проекте</button>
+        <button className={`manual-button ${isManualVisible ? 'pressed' : ''}`} onClick={toggleManualPopup}>Инструкция</button>
+        <div className='functional-buttons-wrapper'>
+          <button className='start-button' onClick={startOnClick} aria-label='Начать' title='Начать'>
+            <StartIcon />
+          </button>
+          <button className='go-to-profile-button-if-logged-in' onClick={profileOnClick} aria-label={isAuth ? 'Личный кабинет' : 'Войти'} title={isAuth ? 'Личный кабинет' : 'Войти'}>
+            <ProfileIcon />
+          </button>
+          <ThemeChanger isBlackTheme={isBlackTheme} toggleTheme={toggleTheme}/>
+        </div>
+      </header>
+      {popupRoot && createPortal(
+        <>
+          <AboutPopup isVisible={isAboutVisible}/>
+          <ManualPopup isVisible={isManualVisible}/>
+        </>,
+        popupRoot
+      )}
+    </>
   );
 };
 
