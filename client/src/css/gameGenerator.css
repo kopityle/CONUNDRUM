@@ -216,7 +216,7 @@
     position: absolute;
     top: 12px;
     left: 75px;
-    z-index: 800;
+    z-index: 960;
     max-height: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -239,7 +239,7 @@
     position: absolute;
     top: 12px;
     left: 75px;
-    z-index: 800;
+    z-index: 960;
     max-height: 100vh;
     display: flex;
     flex-direction: column;

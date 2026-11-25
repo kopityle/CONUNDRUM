@@ -7,7 +7,7 @@
     align-items: center;
     padding: 5px;
     border-radius: 15px;
-    z-index: 5;
+    z-index: 950;
 
     /* Анимация высоты */
     overflow: hidden;
@@ -101,7 +101,7 @@
     left: 10px;
     padding: 3px;
     border-radius: 10px;
-    z-index: 5;
+    z-index: 950;
     max-height: 35px;
   }
 

@@ -62,11 +62,10 @@ const PuzzleCreatorForm = ({ isLTI = false, isConfigureMode = false, isLoading =
             <input
                 className='input-puzzle-name'
                 type='text'
-                placeholder='НАЗВАНИЕ'
+                placeholder='НАЗВАНИЕ (ПО ЖЕЛАНИЮ)'
                 value={puzzleName}
                 onChange={(event) => setPuzzleName(event.target.value)}
                 aria-label='Название игры'
-                required
             />
 
             <div className='input-type-of-puzzle'>
@@ -239,7 +238,9 @@ const PuzzleCreatorForm = ({ isLTI = false, isConfigureMode = false, isLoading =
             </div>
 
             <button type='submit' className='generate-puzzle-button' disabled={isLoading}>
-                {isLTI && isConfigureMode ? 'Сохранить конфигурацию' : 'Сгенерировать'}
+                {isLoading
+                    ? (isLTI && isConfigureMode ? 'Сохранение...' : 'Генерация...')
+                    : (isLTI && isConfigureMode ? 'Сохранить конфигурацию' : 'Сгенерировать')}
             </button>
         </form>
     );

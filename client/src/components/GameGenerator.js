@@ -22,6 +22,7 @@ import {
     downloadGamePdf,
 } from '../services/puzzleService';
 import { getReviewTerms } from '../utils/reviewTerms';
+import { buildAutoPuzzleName } from '../utils/puzzleName';
 import ShareModal from './ShareModal';
 import AuthRequiredModal from './AuthRequiredModal';
 
@@ -315,12 +316,13 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
 
             const data = await response.json();
             const nextGameData = { ...data, gameType };
+            const resolvedName = buildAutoPuzzleName({ puzzleName, inputType, topic, gameData: nextGameData });
             setCurrentGameData(nextGameData);
-            setPuzzleNameForSave(puzzleName || '');
+            setPuzzleNameForSave(resolvedName);
             setIsFormCreatingPuzzle(false);
             setIsLoading(false);
             setGameVersion((version) => version + 1);
-            startGameTracking(nextGameData, puzzleName || 'Unnamed Puzzle', inputType);
+            startGameTracking(nextGameData, resolvedName, inputType);
             trackerRef.current.recordGameGenerated({ gameType, inputType, totalWords });
         } catch (error) {
             notifyError(error.message || 'Произошла ошибка при генерации игры. Пожалуйста, попробуйте снова.');
@@ -361,10 +363,6 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
     }, [createPuzzle, currentPuzzleId, isAuthenticated, updatePuzzle]);
 
     const handleActualSavePuzzle = useCallback(async () => {
-        if (!puzzleNameForSave.trim()) {
-            notifyError('Пожалуйста, введите название игры.');
-            return;
-        }
         if (!currentGameData?.gameType) {
             notifyError('Тип игры не определен в сохраненных данных. Попробуйте сгенерировать заново.');
             return;
@@ -375,8 +373,9 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
         }
 
         try {
+            const nameToSave = puzzleNameForSave?.trim() || buildAutoPuzzleName({ gameData: currentGameData });
             const { puzzle: savedPuzzle, created } = await savePuzzle({
-                name: puzzleNameForSave,
+                name: nameToSave,
                 gameData: currentGameData,
             });
             if (savedPuzzle?.id) {
@@ -400,7 +399,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
             return;
         }
 
-        const gameName = puzzleNameForSave || currentGameData.gameType;
+        const gameName = puzzleNameForSave?.trim() || buildAutoPuzzleName({ gameData: currentGameData });
         try {
             await downloadGamePdf({
                 gameData: currentGameData,
@@ -487,13 +486,11 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
                     words: regenerated.words,
                 };
 
-            if (!puzzleNameForSave.trim()) {
-                throw new Error('Пожалуйста, введите название для пазла.');
-            }
+            const nameToSave = puzzleNameForSave?.trim() || buildAutoPuzzleName({ gameData: updatedGameData });
 
             const hadSavedPuzzle = Boolean(currentPuzzleId);
             const { puzzle: savedPuzzle, created } = await savePuzzle({
-                name: puzzleNameForSave,
+                name: nameToSave,
                 gameData: updatedGameData,
             });
             if (!savedPuzzle?.id) {
@@ -503,8 +500,8 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
             setCurrentGameData(updatedGameData);
             setCurrentPuzzleId(savedPuzzle.id);
             setCurrentShareId(savedPuzzle.share_id || null);
-            setPuzzleNameForSave(savedPuzzle.name || puzzleNameForSave);
-            setOriginalPuzzleNameForEdit(savedPuzzle.name || puzzleNameForSave);
+            setPuzzleNameForSave(savedPuzzle.name || nameToSave);
+            setOriginalPuzzleNameForEdit(savedPuzzle.name || nameToSave);
             notifySuccess(created && hadSavedPuzzle
                 ? `Изменения сохранены как новый пазл "${savedPuzzle.name}". Чтобы обновить исходный, войдите в аккаунт.`
                 : created
@@ -514,7 +511,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
             setEditableWordsAndClues([]);
             setHasUnsavedChanges(false);
             setGameVersion((version) => version + 1);
-            startGameTracking(updatedGameData, puzzleNameForSave);
+            startGameTracking(updatedGameData, nameToSave);
         } catch (error) {
             setIsEditing(true);
             notifyError(`Ошибка: ${error.message || 'Не удалось сохранить изменения.'}`);
@@ -542,7 +539,7 @@ const GameGenerator = ({ isBlackTheme, toggleTheme, user, isAuth, isAuthResolved
 
         try {
             let shareId = currentShareId;
-            let name = puzzleNameForSave?.trim() || currentGameData.gameType;
+            let name = puzzleNameForSave?.trim() || buildAutoPuzzleName({ gameData: currentGameData });
 
             if (!shareId) {
                 const createdPuzzle = await createPuzzle({

@@ -35,6 +35,20 @@ describe('PuzzleCreatorForm', () => {
         }));
     });
 
+    test('название не обязательно и показывает статус генерации', () => {
+        const { rerender } = render(<PuzzleCreatorForm />);
+
+        const name = screen.getByLabelText('Название игры');
+        expect(name).not.toBeRequired();
+        expect(name).toHaveAttribute('placeholder', 'НАЗВАНИЕ (ПО ЖЕЛАНИЮ)');
+
+        rerender(<PuzzleCreatorForm isLoading />);
+        expect(screen.getByRole('button', { name: 'Генерация...' })).toBeDisabled();
+
+        rerender(<PuzzleCreatorForm isLoading isLTI isConfigureMode />);
+        expect(screen.getByRole('button', { name: 'Сохранение...' })).toBeDisabled();
+    });
+
     test('rejects files larger than 10 MB', () => {
         const onFileError = vi.fn();
         render(<PuzzleCreatorForm onFileError={onFileError} />);
