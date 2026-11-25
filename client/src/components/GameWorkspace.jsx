@@ -40,14 +40,18 @@ const GameWorkspace = ({
         setHint(null);
     }, [dataSignature]);
 
-    const crosswordGrid = useMemo(
-        () => currentGameData?.crossword || currentGameData?.grid || [],
-        [dataSignature, currentGameData]
-    );
-    const crosswordWords = useMemo(
-        () => currentGameData?.layout?.result || currentGameData?.words || [],
-        [dataSignature, currentGameData]
-    );
+    const crosswordGrid = useMemo(() => {
+        const storedGrid = currentGameData?.crossword;
+        return Array.isArray(storedGrid) && storedGrid.length
+            ? storedGrid
+            : (currentGameData?.grid || []);
+    }, [dataSignature, currentGameData]);
+    const crosswordWords = useMemo(() => {
+        const layoutWords = currentGameData?.layout?.result;
+        return Array.isArray(layoutWords) && layoutWords.length
+            ? layoutWords
+            : (currentGameData?.words || []);
+    }, [dataSignature, currentGameData]);
     const wordSoupGrid = useMemo(
         () => currentGameData?.grid || [],
         [dataSignature, currentGameData]

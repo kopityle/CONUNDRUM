@@ -40,6 +40,17 @@ test('edit mode keeps the board mounted and marks it as read-only', () => {
     expect(container.querySelector('#preloader-container')).toHaveClass('preloader-overlay');
 });
 
+test('пустой layout.result не скрывает слова из gameData.words', () => {
+    render(
+        <GameWorkspace
+            currentGameData={{ ...gameData, layout: { result: [] } }}
+        />
+    );
+
+    expect(screen.getByTestId('crossword-board')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+});
+
 test('shows a clear message instead of empty board and clue headings', () => {
     render(<GameWorkspace currentGameData={{ gameType: 'crossword', grid: [], words: [] }} />);
 
